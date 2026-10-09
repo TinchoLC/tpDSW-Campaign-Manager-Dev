@@ -14,6 +14,7 @@ const options: swaggerJsdoc.Options = {
         description: "Servidor local",
       },
     ],
+
     components: {
       securitySchemes: {
         bearerAuth: {
