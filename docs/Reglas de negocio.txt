@@ -9,20 +9,24 @@
     .) Estado = ["planificada" / "activa" / "pausada" / "finalizada"]
     .) Transiciones de estado válidas : planificada → activa → pausada ⇄ activa → finalizada
     .) Al borrar una campaña, se le da baja lógica.
-    .) Al borrar una campaña se le da baja a todos los eventos y personajes no jugables que tenga asociados
+    .) Al borrar una campaña se le da baja a todos los mapas y personajes no jugables que tenga asociados
     .) Los objetos asociados a una campaña que es borrada solo se les dará baja si no tienen un PersonajeCampana asociado
     .) MASTER --> El master no debería poder agregarse a sí mismo como jugador de su propia campaña
-    .) si el estado de la campaña es "finalizada" no se pueden agregar jugadores ni eventos ni modificar a "PersonajeCampana"
+    .) si el estado de la campaña es "finalizada" no se pueden agregar jugadores ni mapas/fichas ni modificar a "PersonajeCampana"
 
-3#Evento
-  .) Un evento no puede reciclarse para otra campaña
-  .) "Comenzar campaña y activar evento" --> solo el MASTER puede hacerlo
-  .) Un evento puede tener un estado (pendiente, en curso, finalizado)
+3#Mapa y FichaMapa
+  .) Un Mapa pertenece a una sola campaña y no puede compartirse entre campañas distintas
+  .) Solo el MASTER de la campaña puede crear mapas y cambiar el mapa activo
+  .) Un mapa cuenta con un nombre, descripción opcional, imagen de fondo asociada y estado
+  .) FichaMapa representa la posición de un Personaje (PJ o NPC) dentro de la grilla del mapa
+  .) La posición en la grilla se define mediante coordenadas enteras: posicionX >= 0 y posicionY >= 0
+  .) Solo se pueden colocar en el mapa fichas de personajes que participen de esa campaña
+  .) El MASTER puede colocar y mover fichas de NPCs o de cualquier participante; los jugadores pueden mover la ficha de su propio personaje
 
 4#Imagen
-  .) un evento  puede tener una imagen asociada
-  .) un personaje  puede tener una imagen asociada
-  .) un usuario  puede tener una imagen asociada
+  .) un mapa puede tener una imagen asociada
+  .) un personaje puede tener una imagen asociada
+  .) un usuario puede tener una imagen asociada
   .) un objeto puede tener una imagen asociada
 
 5#Personaje
@@ -47,7 +51,7 @@
 6#PersonajeCampana (instancia dentro de una campaña — el "estado en vivo")
   .) Es de tipo @unique --> esta instanicia de personaje solo puede estar en una campaña 
   .) vidaActual no debe ser mayor a vidaMaxima, ni negativo
-      .) si vidaActual = 0 --> el personaje está "muerto" y no puede participar en eventos ---Ver dee crear un estado "muerto" para PersonajeCampana---
+      .) si vidaActual = 0 --> el personaje está "muerto" y no puede realizar acciones ni mover su ficha en el mapa
   .) manaActual no debe ser mayor a manaMax, ni negativo
   .) Si se elimina un personajeCampana de una Campaña que ha sido eliminada, se realiza un chequeo
      en lo objetos, rasgos y acciones específicos de dicha campaña, en caso de que hayan quedado 'huérfanos'
@@ -85,12 +89,12 @@ correcciones:
     1) de usuario: SI SE PUEDE al sumarse a una campaña ingresar un personaje que ya haya sido creado por otro usuario Y con mas de un personaje 
 
 
-----# Reglas Impostantes de integridad de la BD propuesta por Claude #---
-1)Consistencia campaña-personaje: en cualquier endpoint donde se reciban juntos campanaId y personajeId/personajeCampanaId/eventoId, validar que todos pertenezcan al mismo árbol de datos (evitar mezclar entidades de campañas distintas).
-2)Transacciones: operaciones que tocan más de una tabla a la vez (ej: crear PersonajeCampana + sus Estadisticas iniciales, o borrar una Campana  deben hacerse dentro de una transacción de Prisma (prisma.$transaction) para evitar estados intermedios inconsistentes.
-3)Autorización por fila, no solo por endpoint: no alcanza con "está logueado", hay que verificar en cada operación que el usuario autenticado tiene el rol correcto sobre ESE recurso puntual (dueño del personaje, DM de ESA campaña, etc.), no de cualquier campaña.
-4)Validación de existencia antes de vincular: toda FK opcional que el usuario mande (imagenId, eventoId, usuarioId, etc.) debe validarse contra la tabla real antes del create/update, para devolver un 404/400 claro en vez de un error de FK crudo de MySQL.
-5)Errores de FK → mensajes de negocio: envolver los try/catch en el service layer para traducir códigos de error de Prisma (P2003 FK violation, P2002 unique violation, P2025 registro no encontrado) a respuestas HTTP con mensajes entendibles para el frontend, en vez de exponer el error crudo de MySQL/Prisma.
-6)Borrado lógico vs físico: para Campana, PersonajeCampana y Usuario (entidades con historial importante), evaluá si conviene un borrado lógico (campo activo/estado) en vez de DELETE físico, ya que hoy varias de estas eliminaciones están bloqueadas por RESTRICT precisamente porque tienen historial asociado.
-7) "CUU crear un evento con su descripción e imágenes y asignarle personajes": al asignar personajes, validar que pertenezcan a la campaña del evento — y que el usuario que crea el evento sea el DM de esa campaña.
+----# Reglas de integridad de la base de datos #----
+1) Consistencia campaña-personaje: en cualquier endpoint donde se reciban juntos campanaId y personajeId/personajeCampanaId/mapaId, validar que todos pertenezcan al mismo árbol de datos (evitar mezclar entidades de campañas distintas).
+2) Transacciones: operaciones que tocan más de una tabla a la vez (ej: crear PersonajeCampana + sus dependencias iniciales, o borrar una Campaña) deben hacerse dentro de una transacción de Prisma (prisma.$transaction) para evitar estados intermedios inconsistentes.
+3) Autorización por fila, no solo por endpoint: no alcanza con "está logueado", hay que verificar en cada operación que el usuario autenticado tiene el rol correcto sobre ESE recurso puntual (dueño del personaje, DM de ESA campaña, etc.), no de cualquier campaña.
+4) Validación de existencia antes de vincular: toda FK opcional que el usuario mande (imagenId, mapaId, usuarioId, etc.) debe validarse contra la tabla real antes del create/update, para devolver un 404/400 claro en vez de un error de FK crudo de MySQL.
+5) Errores de FK → mensajes de negocio: envolver los try/catch en el service layer para traducir códigos de error de Prisma (P2003 FK violation, P2002 unique violation, P2025 registro no encontrado) a respuestas HTTP con mensajes entendibles para el frontend, en vez de exponer el error crudo de MySQL/Prisma.
+6) Borrado lógico vs físico: para Campana, PersonajeCampana y Usuario (entidades con historial importante), usar borrado lógico (campo activo: boolean) en vez de DELETE físico.
+7) "CUU Posicionar fichas en mapa": al colocar o mover fichas, validar que el personaje y el mapa pertenezcan a la misma campaña, y que quien modifique fichas de NPC sea el DM de esa campaña.
 8) Todas las queries por defecto deben excluir registros inactivos, salvo que se pida explícitamente lo contrario.

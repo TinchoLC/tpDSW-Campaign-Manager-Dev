@@ -11,7 +11,7 @@
 ## Tema
 
 ### Descripción
-Aplicación web para la gestión de campañas de juegos de rol de mesa (TTRPG), permitiendo crear campañas, administrar personajes y organizar eventos.  
+Aplicación web para la gestión de campañas de juegos de rol de mesa (TTRPG), permitiendo crear campañas, administrar personajes y gestionar mapas con fichas sobre una grilla bidimensional.  
 Facilita la interacción entre jugadores y directores de juego, así como el seguimiento del estado y progreso de los personajes.
 
 ---
@@ -181,7 +181,7 @@ Regularidad:
 |CRUD simple|1. CRUD Usuario<br>2. CRUD Campaña<br>3. CRUD Rasgo|
 |CRUD dependiente|1. CRUD Personaje {depende de} CRUD Usuario<br>2. CRUD Participación {depende de} CRUD Usuario CRUD Jugable y CRUD Campaña|
 |Listado<br>+<br>detalle|1. Listado de campañas filtrado por estado, muestra nombre, master e imagen => detalle permite unirse y entrar a la sesión<br>2. Listado de NPC filtrado por estadoAgresión, muestra nombre y descripción => detalle con todos los atributos|
-|CUU/Epic|1. CUU crear un evento con su descripción e imagenes y asignarle personajes<br>2. Comenzar campaña y activar un evento|
+|CUU/Epic|1. CUU Crear mapa para una campaña asignando imagen y dimensiones de grilla<br>2. CUU Posicionar y mover fichas de personajes o NPCs en la grilla bidimensional del mapa|
 
 ---
 
@@ -190,7 +190,7 @@ Regularidad:
 |Req|Detalle|
 |:-|:-|
 |CRUD |1. CRUD Usuario<br>2. CRUD Campaña<br>3. CRUD Participación<br>4. CRUD Personaje<br>5. CRUD Jugable<br>6. CRUD NoJugable<br>7. CRUD Objeto<br>8. CRUD CatObjeto<br>9. CRUD Rasgo<br>10. CRUD Acción<br>11. CRUD Estadística<br>12. CRUD Imagen|
-|CUU/Epic|1. Crear un personaje con atributos, habilidades, estadísticas y objetos<br>2. Sistema de chat entre jugadores en partida.<br>3. Activar evento y consultar estado de personajes participantes<br>4. Modificar atributos y gestionar objetos durante la campaña|
+|CUU/Epic|1. Crear un personaje con atributos, habilidades, estadísticas y objetos<br>2. Sistema de chat entre jugadores en partida.<br>3. Consultar estado y posición de fichas de personajes en el mapa activo<br>4. Modificar atributos y gestionar objetos durante la campaña|
 
 ---
 

@@ -4,7 +4,7 @@ import "dotenv/config";
 const usuarioId = Number(process.argv[2]);
 
 if (!usuarioId) {
-  console.error("Uso: pnpm exec tsx scripts/generate-token.ts <usuarioId>");
+  console.error("Uso: npx tsx scripts/generate-token.ts <usuarioId>");
   process.exit(1);
 }
 

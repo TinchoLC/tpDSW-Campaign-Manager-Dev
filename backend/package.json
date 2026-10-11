@@ -1,10 +1,14 @@
 {
-  "name": "05.01-express-simple-api",
+  "name": "campaign-manager-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description": "Backend API para Campaign Manager TTRPG",
+  "main": "dist/server.js",
   "scripts": {
-    "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\""
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/server.js\"",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
   },
   "keywords": [],
   "author": "",
