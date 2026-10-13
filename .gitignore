@@ -46,3 +46,7 @@ desktop.ini
 .vite/
 .turbo/
 *.vsix
+
+# Uploads
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
