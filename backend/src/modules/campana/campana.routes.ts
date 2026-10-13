@@ -45,6 +45,9 @@ router.use(authMiddleware);
  *               descripcion:
  *                 type: string
  *                 example: Campaña ambientada en Barovia.
+ *               imagenUrl:
+ *                 type: string
+ *                 example: /uploads/strahd.png
  *     responses:
  *       201:
  *         description: Campaña creada

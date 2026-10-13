@@ -23,10 +23,6 @@ async function assertCanModify(
 
 export const personajeService = {
   async create(data: CreatePersonajeDTO, usuarioId: number) {
-    if (data.imagenId) {
-      const imagen = await prisma.imagen.findUnique({ where: { id: data.imagenId } });
-      if (!imagen) throw new NotFoundError("La imagen indicada no existe");
-    }
     return personajeRepository.create(data, usuarioId);
   },
 
