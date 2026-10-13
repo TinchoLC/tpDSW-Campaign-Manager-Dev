@@ -30,9 +30,7 @@ model Usuario {
   contrasena String
   tipo       String? // ASUNCIÓN: rol a nivel sistema, ver nota al final
   activo     Boolean @default(true) // baja lógica
-
-  imagen   Imagen? @relation(fields: [imagenId], references: [id])
-  imagenId Int?
+  imagenUrl  String?
 
   personajes        Personaje[] // plantillas de PJ y NPCs que creó
   campanasCreadas   Campana[]          @relation("CampanasCreadas")
@@ -45,6 +43,7 @@ model Campana {
   id          Int           @id @default(autoincrement())
   nombre      String
   descripcion String?
+  imagenUrl   String?
   estado      EstadoCampana @default(planificada)
   activo      Boolean       @default(true) // baja lógica
 
@@ -66,12 +65,10 @@ model Mapa {
   nombre      String
   descripcion String?
   estado      String? // ASUNCIÓN: ver nota al final
+  imagenUrl   String?
 
   campana   Campana @relation(fields: [campanaId], references: [id])
   campanaId Int
-
-  imagen   Imagen? @relation(fields: [imagenId], references: [id])
-  imagenId Int?
 
   fichas FichaMapa[]
 }
@@ -82,6 +79,7 @@ model FichaMapa {
   posicionX Int
   posicionY Int
   estado    String?
+  imagenUrl String?
 
   mapa   Mapa @relation(fields: [mapaId], references: [id])
   mapaId Int
@@ -91,9 +89,6 @@ model FichaMapa {
   personajeId        Int?
   personajeCampana   PersonajeCampana? @relation(fields: [personajeCampanaId], references: [id])
   personajeCampanaId Int?
-
-  imagen   Imagen? @relation(fields: [imagenId], references: [id])
-  imagenId Int?
 }
 
 // ===================== PERSONAJE (tabla única con discriminador) =====================
@@ -109,9 +104,7 @@ model Personaje {
   velocidad   Int?
   vidaMax     Int?
   activo      Boolean       @default(true) // baja lógica
-
-  imagen   Imagen? @relation(fields: [imagenId], references: [id])
-  imagenId Int?
+  imagenUrl   String?
 
   fuerza       Int?
   destreza     Int?
@@ -207,9 +200,7 @@ model Objeto {
   visibleAJugador Boolean @default(true)
   valor           Int // solo positivo, se valida en el DTO
   activo          Boolean @default(true)
-
-  imagen   Imagen? @relation(fields: [imagenId], references: [id])
-  imagenId Int?
+  imagenUrl       String?
 
   categoria   CatObjeto? @relation(fields: [catObjetoId], references: [id])
   catObjetoId Int?
@@ -273,19 +264,4 @@ model Accion {
 
   personajes        Personaje[]
   personajesCampana PersonajeCampana[]
-}
-
-// ===================== IMAGEN =====================
-
-model Imagen {
-  id          Int     @id @default(autoincrement())
-  nombre      String
-  descripcion String?
-  archivo     String
-
-  usuarios   Usuario[]
-  personajes Personaje[]
-  mapas      Mapa[]
-  objetos    Objeto[]
-  fichasMapa FichaMapa[]
 }

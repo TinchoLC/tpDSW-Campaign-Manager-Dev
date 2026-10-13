@@ -5,7 +5,7 @@ const camposComunes = z.object({
   nombre: z.string().min(1).max(100),
   descripcion: z.string().optional(),
   especie: z.string().optional(),
-  imagenId: z.number().int().positive().optional(),
+  imagenUrl: z.string().optional(),
   armadura: z.string().optional(),
   iniciativa: z.number().int().optional(),
   velocidad: z.number().int().optional(),
