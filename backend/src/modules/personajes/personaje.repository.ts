@@ -11,7 +11,7 @@ export const personajeRepository = {
   findById(id: number) {
     return prisma.personaje.findUnique({
       where: { id },
-      include: { imagen: true, instancias: true, campana: true },
+      include: { instancias: true, campana: true },
     });
   },
 
