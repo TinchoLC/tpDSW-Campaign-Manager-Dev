@@ -1,0 +1,30 @@
+{
+  "name": "tpdsw-campaign-manager-dev",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+      "dev:backend": "npm run start:dev --prefix backend",
+      "dev:frontend": "npm run dev --prefix frontend",
+      "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TinchoLC/tpDSW-Campaign-Manager-Dev.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TinchoLC/tpDSW-Campaign-Manager-Dev/issues"
+  },
+  "homepage": "https://github.com/TinchoLC/tpDSW-Campaign-Manager-Dev#readme",
+  "dependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
