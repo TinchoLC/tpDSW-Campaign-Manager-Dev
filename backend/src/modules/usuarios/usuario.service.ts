@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { usuarioRepository } from "./usuario.repository";
 import { RegisterUsuarioDTO, LoginUsuarioDTO, UpdateUsuarioDTO } from "./usuario.dto";
 import { hashPassword, comparePassword } from "../../lib/hash";
-import { ConflictError, NotFoundError, UnauthorizedError } from "../../lib/errors";
+import { ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from "../../lib/errors";
 
 export const usuarioService = {
   async register(data: RegisterUsuarioDTO) {
@@ -51,7 +51,11 @@ export const usuarioService = {
     return usuario;
   },
 
-  async update(id: number, data: UpdateUsuarioDTO) {
+  async update(id: number, data: UpdateUsuarioDTO, solicitadoPorId: number) {
+    if (id !== solicitadoPorId) {
+      throw new ForbiddenError("No tenés permiso para modificar este usuario");
+    }
+    
     const usuario = await usuarioRepository.findById(id);
     if (!usuario || !usuario.activo) {
       throw new NotFoundError("Usuario no encontrado");
@@ -71,8 +75,13 @@ export const usuarioService = {
     return usuarioRepository.update(id, data);
   },
 
-  async delete(id: number) {
+  async delete(id: number, solicitadoPorId: number) {
+    if (id !== solicitadoPorId) {
+      throw new ForbiddenError("No tenés permiso para modificar este usuario");
+    }
+
     const usuario = await usuarioRepository.findById(id);
+    
     if (!usuario || !usuario.activo) {
       throw new NotFoundError("Usuario no encontrado");
     }
