@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { uploadMiddleware } from "../../middlewares/upload.middleware";
 import { uploadController } from "./upload.controller";
+import { authMiddleware } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -11,7 +12,6 @@ const router = Router();
  *     summary: Subir una imagen clasificada por tipo
  *     description: Sube un archivo de imagen (JPEG, PNG, WEBP, GIF hasta 5MB) a la subcarpeta seleccionada en uploads.
  *     tags: [Uploads]
- *     security: []
  *     parameters:
  *       - in: path
  *         name: tipo
@@ -54,7 +54,9 @@ const router = Router();
  *                   type: string
  *       400:
  *         description: Archivo ausente, categoría inválida o tipo de archivo no permitido
+ *       401:
+ *         description: No autenticado / Token inválido o ausente
  */
-router.post("/:tipo", uploadMiddleware.single("file"), uploadController.uploadImage);
+router.post("/:tipo", authMiddleware, uploadMiddleware.single("file"), uploadController.uploadImage);
 
 export default router;
