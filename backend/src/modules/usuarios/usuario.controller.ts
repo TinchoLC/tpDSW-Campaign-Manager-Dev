@@ -44,7 +44,7 @@ export const usuarioController = {
     try {
       const id = idSchema.parse(req.params.id);
       const data = updateUsuarioSchema.parse(req.body);
-      const usuario = await usuarioService.update(id, data);
+      const usuario = await usuarioService.update(id, data, req.user.id);
       res.json(usuario);
     } catch (err) {
       next(err);
@@ -54,7 +54,7 @@ export const usuarioController = {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const id = idSchema.parse(req.params.id);
-      await usuarioService.delete(id);
+      await usuarioService.delete(id, req.user.id);
       res.status(204).send();
     } catch (err) {
       next(err);

@@ -106,6 +106,10 @@ router.post("/login", usuarioController.login);
  *     responses:
  *       200:
  *         description: Usuario actualizado
+ *       401:
+ *         description: No autenticado / Token inválido o ausente
+ *       403:
+ *         description: No tenés permiso para modificar este usuario
  *       404:
  *         description: Usuario no encontrado
  *   delete:
@@ -120,6 +124,10 @@ router.post("/login", usuarioController.login);
  *     responses:
  *       204:
  *         description: Usuario dado de baja
+ *       401:
+ *         description: No autenticado / Token inválido o ausente
+ *       403:
+ *         description: No tenés permiso para dar de baja a este usuario
  *       404:
  *         description: Usuario no encontrado
  */
