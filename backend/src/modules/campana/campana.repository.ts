@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { CreateCampanaDTO, EstadoCampanaDTO, UpdateCampanaDTO } from "./campana.dto";
+import { campanaAccesoSelect } from "../../lib/campana-acceso";
 
 export const campanaRepository = {
   create(data: CreateCampanaDTO, usuarioId: number) {
@@ -30,6 +31,13 @@ export const campanaRepository = {
     return prisma.campana.findMany({
       where: { usuarioId, activo: true },
       orderBy: { id: "desc" },
+    });
+  },
+  
+    findParaAcceso(id: number) {
+    return prisma.campana.findFirst({
+      where: { id, activo: true },
+      select: campanaAccesoSelect,
     });
   },
 

@@ -60,12 +60,20 @@ model Campana {
 
 // ===================== MAPA =====================
 
+enum EstadoMapa {
+  preparado
+  en_juego
+}
+
 model Mapa {
-  id          Int     @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   nombre      String
   descripcion String?
-  estado      String? // ASUNCIÓN: ver nota al final
+  estado      EstadoMapa @default(preparado)
   imagenUrl   String?
+  columnas    Int //en celdas
+  filas       Int //en celdas
+  activo      Boolean    @default(true)
 
   campana   Campana @relation(fields: [campanaId], references: [id])
   campanaId Int
@@ -89,6 +97,10 @@ model FichaMapa {
   personajeId        Int?
   personajeCampana   PersonajeCampana? @relation(fields: [personajeCampanaId], references: [id])
   personajeCampanaId Int?
+
+  // Un mismo personaje no puede tener dos fichas en el mismo mapa
+  @@unique([mapaId, personajeId])
+  @@unique([mapaId, personajeCampanaId])
 }
 
 // ===================== PERSONAJE (tabla única con discriminador) =====================
