@@ -2,6 +2,7 @@
 
 export interface AuthUser {
   id: number;
+  tipo: string | null; // rol a nivel sistema ("admin" o null)
   // agregar  otros campos que se guarden en el JWT
 }
 

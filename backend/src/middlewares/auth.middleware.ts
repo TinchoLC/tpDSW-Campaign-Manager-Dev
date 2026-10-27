@@ -17,7 +17,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     const usuario = await prisma.usuario.findUnique({
         where: { id: payload.id },
-        select: { id: true, activo: true },
+        select: { id: true, tipo: true, activo: true },
     });
 
     // Comprobar existencia y actividad del usuario
@@ -30,7 +30,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     // Revisar si dejarlo como 2 condiciones separadas para dar más información en el error o no es necesario.
 
 
-    req.user = { id: payload.id };
+    req.user = { id: usuario.id, tipo: usuario.tipo };
     next();
   } catch (err) {
     next(new UnauthorizedError("Token inválido o expirado"));

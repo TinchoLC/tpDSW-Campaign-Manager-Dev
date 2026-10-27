@@ -42,7 +42,7 @@ model Usuario {
 model Campana {
   id          Int           @id @default(autoincrement())
   nombre      String
-  descripcion String?
+  descripcion String?       @db.VarChar(500)
   imagenUrl   String?
   estado      EstadoCampana @default(planificada)
   activo      Boolean       @default(true) // baja lógica
@@ -68,7 +68,7 @@ enum EstadoMapa {
 model Mapa {
   id          Int        @id @default(autoincrement())
   nombre      String
-  descripcion String?
+  descripcion String?    @db.VarChar(500)
   estado      EstadoMapa @default(preparado)
   imagenUrl   String?
   columnas    Int //en celdas

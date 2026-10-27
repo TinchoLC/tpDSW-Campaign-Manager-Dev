@@ -12,15 +12,30 @@ export const rasgoRepository = {
   },
 
   // Sin campanaId: solo generales.
-  // Con campanaId: generales + los específicos de esa campaña (lo "disponible" ahí).
-  findMany(filtros: { campanaId?: number; soloVisibles: boolean }) {
+  // Con campanaId: generales + los específicos de esa campaña.
+  // La visibilidad de los rasgos ocultos (visibleAJugador = false) se decide por separado:
+  //  - generales ocultos: solo los ve el admin
+  //  - específicos ocultos: solo los ve el master de la campaña
+  findMany(filtros: {
+    campanaId?: number;
+    verGeneralesOcultos: boolean;
+    verEspecificosOcultos: boolean;
+  }) {
+    const generales = filtros.verGeneralesOcultos
+      ? { campanaId: null }
+      : { campanaId: null, visibleAJugador: true };
+
+    const especificos =
+      filtros.campanaId === undefined
+        ? undefined
+        : filtros.verEspecificosOcultos
+          ? { campanaId: filtros.campanaId }
+          : { campanaId: filtros.campanaId, visibleAJugador: true };
+
     return prisma.rasgo.findMany({
       where: {
         activo: true,
-        ...(filtros.campanaId === undefined
-          ? { campanaId: null }
-          : { OR: [{ campanaId: null }, { campanaId: filtros.campanaId }] }),
-        ...(filtros.soloVisibles && { visibleAJugador: true }),
+        OR: especificos ? [generales, especificos] : [generales],
       },
       orderBy: { id: "asc" },
     });
