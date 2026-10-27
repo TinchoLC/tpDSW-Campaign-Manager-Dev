@@ -24,11 +24,11 @@ npm install
 
 Preparar la base de datos (Prisma):
 ```bash
-npm run prisma:generate --prefix backend
-npm run prisma:migrate --prefix backend
+npm run prisma:generate -w backend
+npm run prisma:migrate -w backend
 ```
 
-Ejecutar backend y frontend en simultáneo con currently:
+Ejecutar backend y frontend en simultáneo con concurrently:
 ```bash
 npm run dev
 ```
@@ -36,9 +36,3 @@ npm run dev
 Ejecutar de forma individual:
 * Backend: `npm run dev:backend`
 * Frontend: `npm run dev:frontend`
-
-## Instalación individual (opcional)
-
-Si se prefiere instalar las dependencias por separado:
-* Backend: `npm install --prefix backend` (o `npm install` dentro de la carpeta `backend/`)
-* Frontend: `npm install --prefix frontend` (o `npm install` dentro de la carpeta `frontend/`)
