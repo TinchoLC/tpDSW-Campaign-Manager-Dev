@@ -88,19 +88,19 @@ export const campanaService = {
       });
 
       await tx.rasgo.updateMany({ // baja lógica de rasgos asociados a la campaña
-        where: { campanaId: id },
+        where: { campanaId: id, personajesCampana: { none: { activo: true } } },
         data: { activo: false },
       });
 
       await tx.accion.updateMany({ // baja lógica de acciones asociadas a la campaña
-        where: { campanaId: id },
+        where: { campanaId: id, personajesCampana: { none: { activo: true } } },
         data: { activo: false },
       });
 
       await tx.objeto.updateMany({ // baja lógica de objetos asociados a la campaña que no tengan PersonajeCampana
         where: {
           campanaId: id,
-          personajesCampana: { none: {} }, //none devuelve true si no hay ningún registro relacionado en la tabla PersonajeCampana
+          personajesCampana: { none: { personajeCampana: { activo: true } } }, //none devuelve true si no hay ningún registro relacionado en la tabla PersonajeCampana
         },
         data: { activo: false },
       });
