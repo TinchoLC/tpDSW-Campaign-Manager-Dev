@@ -2,11 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import { personajeService } from "./personaje.service";
 import {
   createPersonajeSchema,
-  updateJugableSchema,      
-  updateNoJugableSchema,    
+  updateJugableSchema,
+  updateNoJugableSchema,
 } from "./personaje.dto";
+import { z } from "zod";
 
-export const personajeController = {
+const idSchema = z.coerce.number().int().positive(); //schema para validar que el id sea un número entero positivo
+
+export const personajeController = { //controlador de personajes que tiene los metodos de crear, actualizar, traer todos los personajes de un usuario, traer un personaje por id y eliminar un personaje por id y validar que el usuario sea el mismo que el del token y que el personaje sea jugable o no jugable y usar el schema correspondiente
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const data = createPersonajeSchema.parse(req.body);
@@ -17,19 +20,20 @@ export const personajeController = {
     }
   },
 
-async update(req: Request, res: Response, next: NextFunction) {
-  try {
-    const personajeExistente = await personajeService.getOne(Number(req.params.id));
-    const schema = personajeExistente.tipo === "jugable" ? updateJugableSchema : updateNoJugableSchema;
-    const data = schema.parse(req.body);
-    const personaje = await personajeService.update(Number(req.params.id), data, req.user.id);
-    res.json(personaje);
-  } catch (err) {
-    next(err);
-  }
-},
-  
-    async misPersonajes(req: Request, res: Response, next: NextFunction) {
+  async update(req: Request, res: Response, next: NextFunction) { //actualizar un personaje por id y usuario y validar que el tipo de personaje sea jugable o no jugable y usar el schema correspondiente
+    try {
+      const id = idSchema.parse(req.params.id);
+      const personajeExistente = await personajeService.getOne(id);
+      const schema = personajeExistente.tipo === "jugable" ? updateJugableSchema : updateNoJugableSchema;
+      const data = schema.parse(req.body);
+      const personaje = await personajeService.update(id, data, req.user.id);
+      res.json(personaje);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async misPersonajes(req: Request, res: Response, next: NextFunction) { //traer todos los personajes de un usuario y validar que el usuario sea el mismo que el del token y que el personaje sea jugable o no jugable y usar el schema correspondiente
     try {
       const personajes = await personajeService.getMisPersonajes(req.user.id);
       res.json(personajes);
@@ -37,19 +41,21 @@ async update(req: Request, res: Response, next: NextFunction) {
       next(err);
     }
   },
-  
-  async getOne(req: Request, res: Response, next: NextFunction) {
-  try {
-    const personaje = await personajeService.getOne(Number(req.params.id));
-    res.json(personaje);
-  } catch (err) {
-    next(err);
-  }
-},
 
-  async delete(req: Request, res: Response, next: NextFunction) {
+  async getOne(req: Request, res: Response, next: NextFunction) { // Obtiene un personaje activo por su ID; el ID de ruta se valida con Zod.
     try {
-      await personajeService.delete(Number(req.params.id), req.user.id);
+      const id = idSchema.parse(req.params.id);
+      const personaje = await personajeService.getOne(id);
+      res.json(personaje);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async delete(req: Request, res: Response, next: NextFunction) { //eliminar un personaje por id y validar que el usuario sea el mismo que el del token y que el personaje sea jugable o no jugable y usar el schema correspondiente
+    try {
+      const id = idSchema.parse(req.params.id);
+      await personajeService.delete(id, req.user.id);
       res.status(204).send();
     } catch (err) {
       next(err);

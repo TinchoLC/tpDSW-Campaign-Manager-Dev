@@ -1,7 +1,6 @@
 import { personajeRepository } from "./personaje.repository";
 import { CreatePersonajeDTO, UpdateJugableDTO, UpdateNoJugableDTO } from "./personaje.dto";
 import { prisma } from "../../lib/prisma";
-import { Prisma } from "@prisma/client";
 import { ForbiddenError, NotFoundError, BadRequestError } from "../../lib/errors";
 
 async function assertCanModify(
@@ -35,25 +34,23 @@ export const personajeService = {
     return personajeRepository.update(id, data);
   },
 
-async getOne(id: number) {
-  const personaje = await personajeRepository.findById(id);
-  if (!personaje) throw new NotFoundError("Personaje no encontrado");
-  return personaje;
-},
+  async getOne(id: number) {
+    const personaje = await personajeRepository.findById(id);
+    if (!personaje) throw new NotFoundError("Personaje no encontrado");
+    return personaje;
+  },
 
   getMisPersonajes(usuarioId: number) {
     return personajeRepository.findByUsuario(usuarioId, "jugable");
   },
-  
+
   async delete(id: number, usuarioId: number) {
     const personaje = await personajeRepository.findById(id);
     if (!personaje) throw new NotFoundError("Personaje no encontrado");
 
     await assertCanModify(personaje, usuarioId);
 
-    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      await tx.personaje.delete({ where: { id } });
-    });
+    return personajeRepository.delete(id);
   },
 
 };
