@@ -5,6 +5,8 @@ import { hashPassword, comparePassword } from "../../lib/hash";
 import { ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
 import { Prisma } from "../../generated/prisma/client";
+import { darDeBajaCampanas } from "../../lib/baja-logica";
+import { darDeBajaPersonajes } from "../../lib/baja-logica";
 
 export const usuarioService = { //esto genera un objeto con las funciones de servicio para usuarios
   async register(data: RegisterUsuarioDTO) {
@@ -89,59 +91,15 @@ export const usuarioService = { //esto genera un objeto con las funciones de ser
     }
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 
-      // 1. Dar de baja campañas donde el usuario es master
-      await tx.campana.updateMany({
-        where: { usuarioId: id },
-        data: { activo: false },
-      });
+return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // 1. Campañas donde es master, con todo su contenido
+      await darDeBajaCampanas(tx, { usuarioId: id });
 
-      // 2. Dar de baja NPCs de esas campañas
-      await tx.personaje.updateMany({
-        where: { tipo: "no_jugable", campana: { usuarioId: id }, },
-        data: { activo: false },
-      });
+      // 2. Personajes que creó: se quitan de los mapas y sus instancias dejan de participar en las campañas donde era jugador
+      await darDeBajaPersonajes(tx, { usuarioId: id });
 
-      // 3. Dar de baja mapas, rasgos y acciones de esas campañas
-      await tx.mapa.updateMany({
-        where: { campana: { usuarioId: id } },
-        data: { activo: false },
-      });
-
-      await tx.rasgo.updateMany({ //Desactiva todos los rasgos específicos de campañas cuyo master es el usuario eliminado. Los rasgos generales no tienen campaña, así que no coinciden y se conservan.
-        where: { campana: { usuarioId: id } },
-        data: { activo: false },
-      });
-
-      await tx.accion.updateMany({ //Hace lo mismo con las acciones específicas de esas campañas. Las acciones generales también se conservan.
-        where: { campana: { usuarioId: id } },
-        data: { activo: false },
-      });
-
-      // 4. Objetos específicos sin instancias asociadas
-      await tx.objeto.updateMany({ //Desactiva solamente objetos específicos de las campañas del usuario que no estén vinculados a ninguna instancia PersonajeCampana.
-        where: {
-          campana: { usuarioId: id },
-          personajesCampana: { none: {} },
-        },
-        data: { activo: false },
-      });
-
-      // 5. Dar de baja los personajes creados por el usuario
-      await tx.personaje.updateMany({
-        where: { usuarioId: id },
-        data: { activo: false },
-      });
-
-      // 6. Quitar al usuario de campañas como jugador pero la instancia de PersonajeCampana queda, pero sin usuario asociado. Esto permite que la campaña y el personaje sigan existiendo, pero el usuario ya no está vinculado a ellos.:
-      await tx.personajeCampana.updateMany({
-        where: { usuarioId: id },
-        data: { usuarioId: null }, // Esto permite que la campaña y el personaje sigan existiendo, pero el usuario ya no está vinculado a ellos.
-      });
-
-      // 7. Finalmente, dar de baja al usuario
-      return tx.usuario.update({
-        where: { id },
-        data: { activo: false },
+      // 3. Finalmente, el usuario
+      return tx.usuario.update({ where: { id }, data: { activo: false } });
       });
     });
   },

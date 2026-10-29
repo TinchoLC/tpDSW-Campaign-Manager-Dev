@@ -1,7 +1,11 @@
 import { personajeRepository } from "./personaje.repository";
 import { CreatePersonajeDTO, UpdateJugableDTO, UpdateNoJugableDTO } from "./personaje.dto";
 import { prisma } from "../../lib/prisma";
-import { ForbiddenError, NotFoundError, BadRequestError } from "../../lib/errors";
+import { Prisma } from "../../generated/prisma/client";
+import { darDeBajaPersonajes } from "../../lib/baja-logica";
+import { campanaAccesoSelect, assertCampanaEscribible } from "../../lib/campana-acceso";
+import { ForbiddenError, NotFoundError } from "../../lib/errors";
+
 
 async function assertCanModify(
   personaje: { tipo: string; usuarioId: number; campanaId: number | null },
@@ -21,9 +25,22 @@ async function assertCanModify(
 }
 
 export const personajeService = {
-  async create(data: CreatePersonajeDTO, usuarioId: number) {
-    return personajeRepository.create(data, usuarioId);
-  },
+async create(data: CreatePersonajeDTO, usuarioId: number) {
+  // Un NPC solo lo puede crear el master de la campaña, y en una campaña vigente
+  if (data.tipo === "no_jugable") {
+    const campana = await prisma.campana.findUnique({
+      where: { id: data.campanaId },
+      select: campanaAccesoSelect,
+    });
+    if (!campana) throw new NotFoundError("La campaña indicada no existe");
+    if (campana.usuarioId !== usuarioId) {
+      throw new ForbiddenError("Solo el master de la campaña puede crear NPCs en ella");
+    }
+    assertCampanaEscribible(campana);
+  }
+
+  return personajeRepository.create(data, usuarioId);
+},
 
   async update(id: number, data: UpdateJugableDTO | UpdateNoJugableDTO, usuarioId: number) {
     const personaje = await personajeRepository.findById(id);
@@ -50,7 +67,8 @@ export const personajeService = {
 
     await assertCanModify(personaje, usuarioId);
 
-    return personajeRepository.delete(id);
+    return prisma.$transaction((tx: Prisma.TransactionClient) =>
+        darDeBajaPersonajes(tx, { id })
   },
 
 };

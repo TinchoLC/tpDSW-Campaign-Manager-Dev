@@ -32,9 +32,8 @@ model Usuario {
   activo     Boolean @default(true) // baja lógica
   imagenUrl  String?
 
-  personajes        Personaje[] // plantillas de PJ y NPCs que creó
-  campanasCreadas   Campana[]          @relation("CampanasCreadas")
-  personajesCampana PersonajeCampana[] // instancias que posee (jugador)
+  personajes      Personaje[] // plantillas de PJ y NPCs que creó
+  campanasCreadas Campana[]   @relation("CampanasCreadas")
 }
 
 // ===================== CAMPAÑA =====================
@@ -189,8 +188,6 @@ model PersonajeCampana {
   acciones   Accion[]
   rasgos     Rasgo[]
   fichasMapa FichaMapa[]
-  usuario    Usuario?                 @relation(fields: [usuarioId], references: [id])
-  usuarioId  Int?
 
   // Un mismo Personaje no puede tener dos instancias en la MISMA campaña
   // (pero sí una instancia por cada campaña distinta en la que participe)

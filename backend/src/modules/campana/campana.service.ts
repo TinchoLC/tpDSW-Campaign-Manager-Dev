@@ -3,6 +3,7 @@ import { CreateCampanaDTO, EstadoCampanaDTO, UpdateCampanaDTO } from "./campana.
 import { prisma } from "../../lib/prisma";
 import { Prisma } from "../../generated/prisma/client";
 import { ForbiddenError, NotFoundError, ConflictError, BadRequestError } from "../../lib/errors";
+import { darDeBajaCampanas } from "../../lib/baja-logica";
 
 // Transiciones válidas según "Reglas de negocio.txt":
 // planificada → activa → pausada ⇄ activa → finalizada
@@ -73,37 +74,8 @@ export const campanaService = {
     // - los NPCs (Personaje tipo=no_jugable) asociados
     // - los objetos específicos de la campaña que NO tengan ningún
     //   PersonajeCampana asociado (si lo tienen, se conservan)
-    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-
-      await tx.campana.update({ where: { id }, data: { activo: false } });
-
-      await tx.personaje.updateMany({ // baja lógica de NPCs asociados a la campaña
-        where: { campanaId: id, tipo: "no_jugable" },
-        data: { activo: false },
-      });
-
-      await tx.mapa.updateMany({ // baja lógica de mapas asociados a la campaña
-        where: { campanaId: id },
-        data: { activo: false },
-      });
-
-      await tx.rasgo.updateMany({ // baja lógica de rasgos asociados a la campaña
-        where: { campanaId: id, personajesCampana: { none: { activo: true } } },
-        data: { activo: false },
-      });
-
-      await tx.accion.updateMany({ // baja lógica de acciones asociadas a la campaña
-        where: { campanaId: id, personajesCampana: { none: { activo: true } } },
-        data: { activo: false },
-      });
-
-      await tx.objeto.updateMany({ // baja lógica de objetos asociados a la campaña que no tengan PersonajeCampana
-        where: {
-          campanaId: id,
-          personajesCampana: { none: { personajeCampana: { activo: true } } }, //none devuelve true si no hay ningún registro relacionado en la tabla PersonajeCampana
-        },
-        data: { activo: false },
-      });
-    });
+    return prisma.$transaction((tx: Prisma.TransactionClient) =>
+      darDeBajaCampanas(tx, { id })
+    );
   },
 };

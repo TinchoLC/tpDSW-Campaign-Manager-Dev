@@ -29,11 +29,4 @@ export const usuarioRepository = {
       select: { id: true, nombre: true, tipo: true, activo: true },
     });
   },
-
-  delete(id: number) {
-    return prisma.usuario.update({
-      where: { id },
-      data: { activo: false },
-    });
-  },
 };

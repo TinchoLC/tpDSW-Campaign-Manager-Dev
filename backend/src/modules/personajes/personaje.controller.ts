@@ -5,9 +5,7 @@ import {
   updateJugableSchema,
   updateNoJugableSchema,
 } from "./personaje.dto";
-import { z } from "zod";
-
-const idSchema = z.coerce.number().int().positive(); //schema para validar que el id sea un número entero positivo
+import { idSchema } from "../../lib/schemas";
 
 export const personajeController = { //controlador de personajes que tiene los metodos de crear, actualizar, traer todos los personajes de un usuario, traer un personaje por id y eliminar un personaje por id y validar que el usuario sea el mismo que el del token y que el personaje sea jugable o no jugable y usar el schema correspondiente
   async create(req: Request, res: Response, next: NextFunction) {

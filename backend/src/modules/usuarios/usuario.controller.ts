@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { z } from "zod";
 import {
   registerUsuarioSchema,
   loginUsuarioSchema,
   updateUsuarioSchema,
 } from "./usuario.dto";
 import { usuarioService } from "./usuario.service";
-
-const idSchema = z.coerce.number().int().positive();
+import { idSchema } from "../../lib/schemas";
 
 export const usuarioController = {
   async register(req: Request, res: Response, next: NextFunction) {
