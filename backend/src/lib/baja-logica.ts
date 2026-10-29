@@ -42,18 +42,19 @@ export async function darDeBajaCampanas(
 //   { usuarioId }  -> todos los de un usuario (usuario.service.delete)
 // Se quitan sus fichas de los mapas (una ficha es solo una posición) y sus
 // instancias dejan de participar en las campañas.
+export async function darDeBajaInstancias(
+  tx: Prisma.TransactionClient,
+  where: Prisma.PersonajeCampanaWhereInput
+) {
+  await tx.fichaMapa.deleteMany({ where: { personajeCampana: where } });
+  await tx.personajeCampana.updateMany({ where, data: { activo: false } });
+}
+
 export async function darDeBajaPersonajes(
   tx: Prisma.TransactionClient,
   where: Prisma.PersonajeWhereInput
 ) {
-  await tx.fichaMapa.deleteMany({
-    where: { OR: [{ personaje: where }, { personajeCampana: { personaje: where } }] },
-  });
-
-  await tx.personajeCampana.updateMany({
-    where: { personaje: where },
-    data: { activo: false },
-  });
-
+  await tx.fichaMapa.deleteMany({ where: { personaje: where } }); // fichas de NPCs
+  await darDeBajaInstancias(tx, { personaje: where });
   await tx.personaje.updateMany({ where, data: { activo: false } });
 }
