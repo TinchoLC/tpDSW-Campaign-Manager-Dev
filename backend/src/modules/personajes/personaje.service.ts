@@ -69,6 +69,6 @@ async create(data: CreatePersonajeDTO, usuarioId: number) {
 
     return prisma.$transaction((tx: Prisma.TransactionClient) =>
         darDeBajaPersonajes(tx, { id })
-  },
+  )},
 
 };
