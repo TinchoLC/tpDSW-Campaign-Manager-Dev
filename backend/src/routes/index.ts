@@ -3,18 +3,26 @@ import usuarioRoutes from "../modules/usuarios/usuario.routes";
 import personajeRoutes from "../modules/personajes/personaje.routes";
 import campanaRoutes from "../modules/campana/campana.routes";
 import uploadRoutes from "../modules/upload/upload.routes";
-import fichasDeMapaRoutes from "../modules/fichas/ficha.routes";
-import mapasDeCampanaRoutes from "../modules/mapas/mapa.routes";
+import fichaRoutes, { fichasDeMapaRoutes } from "../modules/fichas/ficha.routes";
+import mapaRoutes, { mapasDeCampanaRoutes } from "../modules/mapas/mapa.routes";
 import rasgoRoutes from "../modules/rasgos/rasgo.routes";
-
+import participantesRoutes from "../modules/personajes-campana/personaje-campana.routes";
 
 const router = Router();
 
 router.use("/usuarios", usuarioRoutes);
 router.use("/personajes", personajeRoutes);
+
+// Rutas anidadas: van antes que el router base de su recurso padre
+router.use("/campanas/:campanaId/mapas", mapasDeCampanaRoutes);
+router.use("/campanas/:campanaId/participantes", participantesRoutes);
 router.use("/campanas", campanaRoutes);
+
+router.use("/mapas/:mapaId/fichas", fichasDeMapaRoutes);
+router.use("/mapas", mapaRoutes);
+router.use("/fichas", fichaRoutes);
+
 router.use("/upload", uploadRoutes);
-router.use("/fichas", fichasDeMapaRoutes);
-router.use("/mapas", mapasDeCampanaRoutes);
 router.use("/rasgos", rasgoRoutes);
+
 export default router;
