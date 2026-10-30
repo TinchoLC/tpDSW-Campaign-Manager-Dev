@@ -1,4 +1,4 @@
-import { ESTADOS_CAMPANA, ETIQUETAS_ESTADO, type FiltroEstadoCampana } from '../../../frontend-campanas/frontend/src/services/campana.service';
+import { ESTADOS_CAMPANA, ETIQUETAS_ESTADO, type FiltroEstadoCampana } from '../services/campana.service';
 
 const OPCIONES: { valor: FiltroEstadoCampana; etiqueta: string }[] = [
   { valor: 'todas', etiqueta: 'Todas' },

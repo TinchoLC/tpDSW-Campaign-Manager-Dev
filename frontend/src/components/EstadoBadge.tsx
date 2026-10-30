@@ -1,4 +1,4 @@
-import { ETIQUETAS_ESTADO, type EstadoCampana } from '../../../frontend-campanas/frontend/src/services/campana.service';
+import { ETIQUETAS_ESTADO, type EstadoCampana } from '../services/campana.service';
 
 const CLASES: Record<EstadoCampana, string> = {
   planificada: 'text-bg-secondary',

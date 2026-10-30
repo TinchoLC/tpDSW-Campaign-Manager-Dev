@@ -1,4 +1,4 @@
-import type { Ficha } from '../../../frontend-campanas/frontend/src/services/mapa.service';
+import type { Ficha } from '../services/mapa.service';
 import { esFichaDelUsuario, esNpc, nombreDeFicha } from '../utils/ficha';
 
 interface ListaFichasProps {

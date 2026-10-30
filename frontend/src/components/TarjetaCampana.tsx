@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { Campana } from '../../../frontend-campanas/frontend/src/services/campana.service';
+import type { Campana } from '../services/campana.service';
 import { EstadoBadge } from './EstadoBadge';
 import { ImagenPortada } from './ImagenPortada';
 import { RolBadge } from './RolBadge';

@@ -1,4 +1,4 @@
-import type { Participante } from '../../../frontend-campanas/frontend/src/services/campana.service';
+import type { Participante } from '../services/campana.service';
 import { Avatar } from './Avatar';
 
 // Personajes que participan en una campaña, con su jugador y su vida

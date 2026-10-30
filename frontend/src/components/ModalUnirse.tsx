@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { campanaService } from '../../../frontend-campanas/frontend/src/services/campana.service';
-import type { PersonajeJugable } from '../../../frontend-campanas/frontend/src/services/personaje.service';
+import { campanaService } from '../services/campana.service';
+import type { PersonajeJugable } from '../services/personaje.service';
 
 interface ModalUnirseProps {
   campanaId: number;

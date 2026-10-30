@@ -1,5 +1,5 @@
 import { resolveAssetUrl } from '../services/api';
-import type { Ficha, MapaConFichas } from '../../../frontend-campanas/frontend/src/services/mapa.service';
+import type { Ficha, MapaConFichas } from '../services/mapa.service';
 import { esFichaDelUsuario, esNpc, estaCaida, imagenDeFicha, nombreDeFicha } from '../utils/ficha';
 
 interface TokenProps {
