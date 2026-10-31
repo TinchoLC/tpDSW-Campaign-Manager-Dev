@@ -1,4 +1,5 @@
 import { apiFetch } from './api';
+import type { Personaje } from './personaje.service';
 
 export const ESTADOS_CAMPANA = ['planificada', 'activa', 'pausada', 'finalizada'] as const;
 export type EstadoCampana = (typeof ESTADOS_CAMPANA)[number];
@@ -23,6 +24,15 @@ export interface Campana {
   activo: boolean;
   usuarioId: number;
   master: { id: number; nombre: string };
+}
+
+export interface CampanaInput {
+  nombre: string;
+  descripcion?: string;
+}
+
+export interface CampanaUpdate extends Partial<CampanaInput> {
+  estado?: EstadoCampana;
 }
 
 export type EstadoPersonajeCampana = 'vivo' | 'muerto' | 'inconsciente';
@@ -53,6 +63,23 @@ export const campanaService = {
     return apiFetch<Campana>(`/campanas/${id}`);
   },
 
+  crear(datos: CampanaInput): Promise<Campana> {
+    return apiFetch<Campana>('/campanas', { method: 'POST', body: JSON.stringify(datos) });
+  },
+
+  actualizar(id: number, datos: CampanaUpdate): Promise<Campana> {
+    return apiFetch<Campana>(`/campanas/${id}`, { method: 'PATCH', body: JSON.stringify(datos) });
+  },
+
+  eliminar(id: number): Promise<void> {
+    return apiFetch<void>(`/campanas/${id}`, { method: 'DELETE' });
+  },
+
+  // NPCs de la campaña (por ahora solo los ve el master)
+  npcs(id: number): Promise<Personaje[]> {
+    return apiFetch<Personaje[]>(`/campanas/${id}/npcs`);
+  },
+
   // Solo responde para el master y los jugadores; al resto le devuelve 403
   participantes(campanaId: number): Promise<Participante[]> {
     return apiFetch<Participante[]>(`/campanas/${campanaId}/participantes`);
@@ -63,6 +90,13 @@ export const campanaService = {
     return apiFetch<unknown>(`/campanas/${campanaId}/participantes`, {
       method: 'POST',
       body: JSON.stringify({ personajeId }),
+    });
+  },
+
+  // Quita un personaje de la campaña (baja lógica; se pierden sus fichas de los mapas)
+  desvincular(campanaId: number, participanteId: number): Promise<void> {
+    return apiFetch<void>(`/campanas/${campanaId}/participantes/${participanteId}`, {
+      method: 'DELETE',
     });
   },
 };
