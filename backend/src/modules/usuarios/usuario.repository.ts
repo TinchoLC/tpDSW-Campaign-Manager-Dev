@@ -5,7 +5,7 @@ export const usuarioRepository = {
   create(data: { nombre: string; contrasena: string }) {
     return prisma.usuario.create({
       data,
-      select: { id: true, nombre: true, tipo: true, activo: true },
+      select: { id: true, nombre: true, tipo: true, activo: true, imagenUrl: true },
     });
   },
 
@@ -18,7 +18,7 @@ export const usuarioRepository = {
   findById(id: number) {
     return prisma.usuario.findUnique({
       where: { id },
-      select: { id: true, nombre: true, tipo: true, activo: true },
+      select: { id: true, nombre: true, tipo: true, activo: true, imagenUrl: true },
     });
   },
 
@@ -26,7 +26,7 @@ export const usuarioRepository = {
     return prisma.usuario.update({
       where: { id },
       data,
-      select: { id: true, nombre: true, tipo: true, activo: true },
+      select: { id: true, nombre: true, tipo: true, activo: true, imagenUrl: true },
     });
   },
 };

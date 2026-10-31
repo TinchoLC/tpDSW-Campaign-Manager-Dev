@@ -29,6 +29,7 @@ export interface Campana {
 export interface CampanaInput {
   nombre: string;
   descripcion?: string;
+  imagenUrl?: string | null;
 }
 
 export interface CampanaUpdate extends Partial<CampanaInput> {

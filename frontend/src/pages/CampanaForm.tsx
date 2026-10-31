@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { ErrorPagina } from '../components/ErrorPagina';
+import { ImageUpload } from '../components/ImageUpload';
 import { useAuth } from '../context/AuthContext';
 import { useApi } from '../hooks/useApi';
 import { campanaService, type Campana, type CampanaInput } from '../services/campana.service';
@@ -17,6 +18,7 @@ interface FormularioProps {
 function Formulario({ titulo, inicial, onGuardar }: FormularioProps) {
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [imagenUrl, setImagenUrl] = useState<string | null>(inicial?.imagenUrl ?? null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -26,10 +28,16 @@ function Formulario({ titulo, inicial, onGuardar }: FormularioProps) {
 
     setGuardando(true);
     try {
-      const campana = await onGuardar({
+      const datos: CampanaInput = {
         nombre: String(fd.get('nombre') || '').trim(),
         descripcion: String(fd.get('descripcion') || '').trim(),
-      });
+      };
+      if (imagenUrl) {
+        datos.imagenUrl = imagenUrl;
+      } else if (inicial) {
+        datos.imagenUrl = null;
+      }
+      const campana = await onGuardar(datos);
       navigate(`/campanas/${campana.id}`);
     } catch (err) {
       setError(mensajeError(err));
@@ -46,17 +54,36 @@ function Formulario({ titulo, inicial, onGuardar }: FormularioProps) {
       <form onSubmit={handleSubmit} className="card p-4">
         <div className="mb-3">
           <label className="form-label">Nombre</label>
-          <input name="nombre" type="text" className="form-control" maxLength={100}
-            defaultValue={inicial?.nombre} required />
+          <input
+            name="nombre"
+            type="text"
+            className="form-control"
+            maxLength={100}
+            defaultValue={inicial?.nombre}
+            required
+          />
         </div>
 
         <div className="mb-3">
           <label className="form-label">Descripción</label>
-          <textarea name="descripcion" className="form-control" rows={4} maxLength={500}
-            defaultValue={inicial?.descripcion ?? ''} />
+          <textarea
+            name="descripcion"
+            className="form-control"
+            rows={4}
+            maxLength={500}
+            defaultValue={inicial?.descripcion ?? ''}
+          />
         </div>
 
-        <div className="d-flex gap-2">
+        <ImageUpload
+          tipo="campanas"
+          valorInicial={inicial?.imagenUrl}
+          onChange={setImagenUrl}
+          etiqueta="Imagen de portada"
+          forma="rectangulo"
+        />
+
+        <div className="d-flex gap-2 mt-2">
           <button type="submit" className="btn btn-primary" disabled={guardando}>
             Guardar
           </button>
@@ -75,10 +102,22 @@ function EditarCampana({ id }: { id: number }) {
 
   if (cargando) return <Cargando pagina />;
   if (error || !datos) {
-    return <ErrorPagina mensaje={error?.message ?? 'Campaña no encontrada'} volverA="/campanas" textoVolver="← Volver a las campañas" />;
+    return (
+      <ErrorPagina
+        mensaje={error?.message ?? 'Campaña no encontrada'}
+        volverA="/campanas"
+        textoVolver="← Volver a las campañas"
+      />
+    );
   }
   if (datos.usuarioId !== usuario?.id) {
-    return <ErrorPagina mensaje="Solo el master puede editar la campaña" volverA="/campanas" textoVolver="← Volver a las campañas" />;
+    return (
+      <ErrorPagina
+        mensaje="Solo el master puede editar la campaña"
+        volverA="/campanas"
+        textoVolver="← Volver a las campañas"
+      />
+    );
   }
 
   return (

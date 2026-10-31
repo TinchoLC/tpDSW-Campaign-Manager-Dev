@@ -5,11 +5,13 @@ export interface UsuarioPerfil {
   nombre: string;
   tipo: string | null;
   activo: boolean;
+  imagenUrl?: string | null;
 }
 
 export interface UpdateUsuarioDTO {
   nombre?: string;
   contrasena?: string;
+  imagenUrl?: string | null;
 }
 
 export const usuarioService = {

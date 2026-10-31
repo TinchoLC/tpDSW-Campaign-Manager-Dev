@@ -11,7 +11,7 @@ export const estadoCampanaEnum = z.enum([
 export const createCampanaSchema = z.object({
   nombre: z.string().min(1).max(100),
   descripcion: z.string().max(500).optional(),
-  imagenUrl: z.string().optional(),
+  imagenUrl: z.string().nullable().optional(),
   // "estado" NO se recibe al crear: toda campaña nace en "planificada"
   // "usuarioId" (master) NO va en el body: sale del usuario autenticado
 });
@@ -20,7 +20,7 @@ export const updateCampanaSchema = z
   .object({
     nombre: z.string().min(1).max(100).optional(),
     descripcion: z.string().max(500).optional(),
-    imagenUrl: z.string().optional(),
+    imagenUrl: z.string().nullable().optional(),
     estado: estadoCampanaEnum.optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {

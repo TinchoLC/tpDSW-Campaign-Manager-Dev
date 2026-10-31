@@ -43,6 +43,7 @@ export const usuarioService = { //esto genera un objeto con las funciones de ser
         id: usuario.id,
         nombre: usuario.nombre,
         tipo: usuario.tipo,
+        imagenUrl: usuario.imagenUrl,
       },
     };
   },

@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { ErrorPagina } from '../components/ErrorPagina';
+import { ImageUpload } from '../components/ImageUpload';
 import { useAuth } from '../context/AuthContext';
 import { useApi } from '../hooks/useApi';
 import { usuarioService, type UpdateUsuarioDTO } from '../services/usuario.service';
@@ -18,10 +19,24 @@ export function Perfil() {
   const [errorForm, setErrorForm] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [imagenUrl, setImagenUrl] = useState<string | null>(null);
+
+  // Sincronizar estado inicial de la imagen cuando cargue el perfil
+  useEffect(() => {
+    if (perfil) {
+      setImagenUrl(perfil.imagenUrl ?? null);
+    }
+  }, [perfil]);
 
   if (cargando) return <Cargando pagina />;
   if (error || !perfil || !usuario) {
-    return <ErrorPagina mensaje={error?.message ?? 'No se pudo cargar el perfil'} volverA="/campanas" textoVolver="← Volver a las campañas" />;
+    return (
+      <ErrorPagina
+        mensaje={error?.message ?? 'No se pudo cargar el perfil'}
+        volverA="/campanas"
+        textoVolver="← Volver a las campañas"
+      />
+    );
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -38,6 +53,7 @@ export function Perfil() {
     const cambios: UpdateUsuarioDTO = {};
     if (nombre !== perfil.nombre) cambios.nombre = nombre;
     if (contrasena !== '') cambios.contrasena = contrasena;
+    if (imagenUrl !== (perfil.imagenUrl ?? null)) cambios.imagenUrl = imagenUrl;
 
     if (Object.keys(cambios).length === 0) {
       setErrorForm('No hay cambios para guardar');
@@ -47,11 +63,16 @@ export function Perfil() {
     setGuardando(true);
     try {
       const actualizado = await usuarioService.actualizar(usuario.id, cambios);
-      // El nombre se muestra en la barra de navegación, así que se actualiza la sesión
-      actualizarUsuario({ ...usuario, nombre: actualizado.nombre });
+      // El nombre y el avatar se muestran en la barra de navegación, así que se actualiza la sesión
+      actualizarUsuario({
+        ...usuario,
+        nombre: actualizado.nombre,
+        imagenUrl: actualizado.imagenUrl,
+      });
       recargar();
       setMensaje('Perfil actualizado');
-      (form.elements.namedItem('contrasena') as HTMLInputElement).value = '';
+      const inputPass = form.elements.namedItem('contrasena') as HTMLInputElement | null;
+      if (inputPass) inputPass.value = '';
     } catch (err) {
       setErrorForm(mensajeError(err));
     } finally {
@@ -60,9 +81,12 @@ export function Perfil() {
   };
 
   const eliminarCuenta = async () => {
-    if (!window.confirm(
-      'Se da de baja tu cuenta, tus campañas como master y tus personajes. Esta acción no se puede deshacer. ¿Continuar?'
-    )) return;
+    if (
+      !window.confirm(
+        'Se da de baja tu cuenta, tus campañas como master y tus personajes. Esta acción no se puede deshacer. ¿Continuar?'
+      )
+    )
+      return;
 
     try {
       await usuarioService.eliminar(usuario.id);
@@ -82,16 +106,36 @@ export function Perfil() {
       <form onSubmit={handleSubmit} className="card p-4 mb-4">
         <p className="text-body-secondary">Rol: {perfil.tipo ?? 'jugador'}</p>
 
+        <ImageUpload
+          tipo="usuarios"
+          valorInicial={perfil.imagenUrl}
+          onChange={setImagenUrl}
+          etiqueta="Foto de perfil / Avatar"
+          forma="circulo"
+        />
+
         <div className="mb-3">
           <label className="form-label">Nombre de usuario</label>
-          <input name="nombre" type="text" className="form-control" minLength={3} maxLength={50}
-            defaultValue={perfil.nombre} required />
+          <input
+            name="nombre"
+            type="text"
+            className="form-control"
+            minLength={3}
+            maxLength={50}
+            defaultValue={perfil.nombre}
+            required
+          />
         </div>
 
         <div className="mb-3">
           <label className="form-label">Nueva contraseña</label>
-          <input name="contrasena" type="password" className="form-control" minLength={6}
-            placeholder="Dejala vacía para no cambiarla" />
+          <input
+            name="contrasena"
+            type="password"
+            className="form-control"
+            minLength={6}
+            placeholder="Dejala vacía para no cambiarla"
+          />
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={guardando}>
