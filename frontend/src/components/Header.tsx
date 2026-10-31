@@ -58,17 +58,10 @@ export function Header() {
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink to="/catalogo" className="nav-link">
-                Catálogo
+              <NavLink to="/rasgos" className="nav-link">
+                Rasgos
               </NavLink>
             </li>
-            {usuario.tipo === 'admin' && (
-              <li className="nav-item">
-                <NavLink to="/admin" className="nav-link">
-                  Administración
-                </NavLink>
-              </li>
-            )}
           </ul>
 
           {/* Usuario y Cerrar sesión */}
