@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Navbar } from './Navbar';
+import { Header } from './Header';
 
 // Envuelve las rutas que requieren sesión iniciada
 export function LayoutPrivado() {
@@ -12,7 +12,7 @@ export function LayoutPrivado() {
 
   return (
     <>
-      <Navbar />
+      <Header />
       <Outlet />
     </>
   );
