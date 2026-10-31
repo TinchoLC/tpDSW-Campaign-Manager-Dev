@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Cargando } from '../components/Cargando';
 import { FiltroEstado } from '../components/FiltroEstado';
 import { TarjetaCampana } from '../components/TarjetaCampana';
@@ -20,7 +21,13 @@ export function Campanas() {
     <main className="container py-4">
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <h2 className="mb-0">Campañas</h2>
-        <FiltroEstado valor={filtro} onChange={setFiltro} />
+        <div className="d-flex flex-wrap align-items-center gap-3">
+          <FiltroEstado valor={filtro} onChange={setFiltro} />
+          <Link to="/campanas/nueva" className="btn btn-primary btn-sm">
+            <i className="bi bi-plus-lg me-1" />
+            Nueva campaña
+          </Link>
+        </div>
       </div>
 
       {loading && <Cargando />}

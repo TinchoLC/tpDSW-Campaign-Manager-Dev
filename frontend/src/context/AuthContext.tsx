@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { setUnauthorizedHandler } from '../services/api';
-import { authService, type CredentialsDTO, type Usuario } from '../../../frontend/src/services/auth.service';
+import { authService, type CredentialsDTO, type Usuario } from '../services/auth.service';
 
 interface AuthContextType {
   usuario: Usuario | null;
@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (credenciales: CredentialsDTO) => Promise<void>;
   register: (datos: CredentialsDTO) => Promise<void>;
   logout: () => void;
+  actualizarUsuario: (usuario: Usuario) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,6 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsuario(null);
   }, []);
 
+  // Actualiza los datos de la sesión (por ejemplo el nombre tras editar el perfil)
+  const actualizarUsuario = useCallback((nuevo: Usuario) => {
+    localStorage.setItem('usuario', JSON.stringify(nuevo));
+    setUsuario(nuevo);
+  }, []);
+
   // Si la API responde 401 con un token guardado (vencido o inválido), cerramos la sesión
   // y las rutas protegidas redirigen solas al login
   useEffect(() => {
@@ -63,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        actualizarUsuario,
       }}
     >
       {children}
