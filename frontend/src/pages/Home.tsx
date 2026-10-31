@@ -11,7 +11,7 @@ export function Home() {
   }
 
   return (
-    <main className="container d-flex flex-column justify-content-center align-items-center min-vh-100 text-center py-5">
+    <main className="container d-flex flex-column justify-content-center align-items-center flex-grow-1 text-center py-5">
       <div style={{ maxWidth: '640px' }}>
         <CircleIcon diametro={96} className="mb-4" />
         <h1 className="display-5 fw-bold mb-3">Campaign Manager</h1>

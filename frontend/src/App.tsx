@@ -13,6 +13,7 @@ import { PersonajeForm } from './pages/PersonajeForm';
 import { Rasgos } from './pages/Rasgos';
 import { Register } from './pages/Register';
 import { Sesion } from './pages/Sesion';
+import { Layout } from './components/Layout';
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -59,7 +60,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <Layout>
+          <AppRoutes />
+        </Layout>
       </AuthProvider>
     </BrowserRouter>
   );
