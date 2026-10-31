@@ -10,7 +10,7 @@ import { idSchema } from "../../lib/schemas";
 export const usuarioController = {
   async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = registerUsuarioSchema.parse(req.body);
+      const data = registerUsuarioSchema.parse(req.body); // Validamos los datos de entrada usando Zod para asegurarnos de que cumplen con el esquema definido para el registro de usuarios
       const usuario = await usuarioService.register(data);
       res.status(201).json(usuario);
     } catch (err) {

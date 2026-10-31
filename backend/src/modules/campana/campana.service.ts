@@ -4,6 +4,8 @@ import { prisma } from "../../lib/prisma";
 import { Prisma } from "../../generated/prisma/client";
 import { ForbiddenError, NotFoundError, ConflictError, BadRequestError } from "../../lib/errors";
 import { darDeBajaCampanas } from "../../lib/baja-logica";
+import { personajeRepository } from "../personajes/personaje.repository";
+
 
 // Transiciones válidas según "Reglas de negocio.txt":
 // planificada → activa → pausada ⇄ activa → finalizada
@@ -46,6 +48,18 @@ export const campanaService = {
     const campana = await campanaRepository.findById(id);
     if (!campana) throw new NotFoundError("Campaña no encontrada");
     return campana;
+  },
+
+  // Solo el master ve los NPCs de su campaña
+  async getNpcs(campanaId: number, usuarioId: number) {
+    const campana = await campanaRepository.findParaAcceso(campanaId);
+    if (!campana) throw new NotFoundError("Campaña no encontrada");
+
+    if (campana.usuarioId !== usuarioId) {
+      throw new ForbiddenError("Solo el master puede ver los NPCs de la campaña");
+    }
+
+    return personajeRepository.findNpcsByCampana(campanaId);
   },
 
   async update(id: number, data: UpdateCampanaDTO, usuarioId: number) {

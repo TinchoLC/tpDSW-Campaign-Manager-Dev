@@ -61,6 +61,17 @@ export const campanaController = {
     }
   },
 
+  async getNpcs(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = idSchema.parse(req.params.id);
+      const npcs = await campanaService.getNpcs(id, req.user.id);
+
+      res.json(npcs);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = idSchema.parse(req.params.id);

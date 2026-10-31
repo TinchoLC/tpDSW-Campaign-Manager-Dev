@@ -147,4 +147,35 @@ router.get("/:id", campanaController.getOne);
 router.patch("/:id", campanaController.update);
 router.delete("/:id", campanaController.delete);
 
+/**
+ * @swagger
+ * /campanas/{id}/npcs:
+ *   get:
+ *     summary: Listar los NPCs de una campaña
+ *     description: Solo el master de la campaña. Devuelve los personajes no jugables activos.
+ *     tags: [Campañas]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de NPCs activos de la campaña
+ *       401:
+ *         description: Token inválido o ausente
+ *       403:
+ *         description: Solo el master puede ver los NPCs
+ *       404:
+ *         description: Campaña no encontrada
+ */
+router.get("/:id/npcs", campanaController.getNpcs);
+
+
+
+router.get("/:id", campanaController.getOne);
+router.patch("/:id", campanaController.update);
+router.delete("/:id", campanaController.delete);
+
 export default router;

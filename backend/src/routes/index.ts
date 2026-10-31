@@ -1,5 +1,5 @@
-import { Router } from "express";
-import usuarioRoutes from "../modules/usuarios/usuario.routes";
+import { Router } from "express"; // Importamos el Router de express para poder crear rutas en nuestra aplicación
+import usuarioRoutes from "../modules/usuarios/usuario.routes"; // Importamos las rutas de usuario desde el módulo correspondiente
 import personajeRoutes from "../modules/personajes/personaje.routes";
 import campanaRoutes from "../modules/campana/campana.routes";
 import uploadRoutes from "../modules/upload/upload.routes";
@@ -8,7 +8,7 @@ import mapaRoutes, { mapasDeCampanaRoutes } from "../modules/mapas/mapa.routes";
 import rasgoRoutes from "../modules/rasgos/rasgo.routes";
 import participantesRoutes from "../modules/personajes-campana/personaje-campana.routes";
 
-const router = Router();
+const router = Router(); // Creamos una instancia del Router para definir nuestras rutas principales de la aplicación
 
 router.use("/usuarios", usuarioRoutes);
 router.use("/personajes", personajeRoutes);
