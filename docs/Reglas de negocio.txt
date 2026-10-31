@@ -41,12 +41,17 @@
         .) un personaje jugable puede ser agregado a una campaña por su creador 
         .) un personaje jugable solo puede ser eliminado por su creador 
         .) Un personaje jugable puede estar en varias campañas
+        .) Un personaje jugable solo puede ser consultado por el usuario que lo creó.
   .) tipo = no jugable -->
         .) "estadoAgresion" = ["hostil" | "neutral" | "amistoso"]  (es un ejemplo)
+        .) Un NPC solo puede ser consultado por el master de su campaña; cualquier otro usuario recibe un rechazo por falta de permisos.
+        .) El DM puede listar los NPCs de su campaña filtrando por estado de agresión (hostil, neutral o amistoso). Si no indica filtro, ve todos.
   .) Un personaje solo puede ser modificado o creado por el Usuario que lo creó 
   .) Las instancias de PersonajeCampana también pueden ser modificadas por el DM de la campaña a la que pertenezcan
   .) El DM puede desvincular un personaje de su campaña.
   .) No se puede cambiar el tipo de personaje
+  .) Un personaje inexistente o dado de baja se informa como no encontrado.
+
 
 6#PersonajeCampana (instancia dentro de una campaña — el "estado en vivo")
   .) Es de tipo @unique --> esta instanicia de personaje solo puede estar en una campaña 
