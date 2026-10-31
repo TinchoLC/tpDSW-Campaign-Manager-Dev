@@ -11,7 +11,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
       <footer className="container border-top py-3 text-secondary small d-flex justify-content-between gap-2 flex-wrap">
         <span>Campaign Manager · Proyecto DSW</span>
-        <span>Campañas, personajes y mapas</span>
+        <span>Bolzico Nicolás, Cabrera Martín, Gregoret Agustín</span>
       </footer>
     </div>
   );
