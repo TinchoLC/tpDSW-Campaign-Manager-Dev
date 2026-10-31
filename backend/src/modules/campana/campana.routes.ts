@@ -160,9 +160,18 @@ router.delete("/:id", campanaController.delete);
  *         required: true
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: estadoAgresion
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [hostil, neutral, amistoso]
+ *         description: Filtra los NPCs por estado de agresión
  *     responses:
  *       200:
  *         description: Lista de NPCs activos de la campaña
+ *       400:
+ *         description: Valor de estadoAgresion inválido
  *       401:
  *         description: Token inválido o ausente
  *       403:
@@ -171,11 +180,5 @@ router.delete("/:id", campanaController.delete);
  *         description: Campaña no encontrada
  */
 router.get("/:id/npcs", campanaController.getNpcs);
-
-
-
-router.get("/:id", campanaController.getOne);
-router.patch("/:id", campanaController.update);
-router.delete("/:id", campanaController.delete);
 
 export default router;

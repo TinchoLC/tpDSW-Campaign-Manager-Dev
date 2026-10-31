@@ -25,9 +25,14 @@ export const personajeRepository = { //repositorio de personajes que tiene los m
     });
   },
 
-  findNpcsByCampana(campanaId: number) {
+  findNpcsByCampana(campanaId: number, estadoAgresion?: string) {
     return prisma.personaje.findMany({
-      where: { campanaId, tipo: "no_jugable", activo: true },
+      where: {
+        campanaId,
+        tipo: "no_jugable",
+        activo: true,
+        ...(estadoAgresion && { estadoAgresion }),
+      },
       orderBy: { id: "asc" },
     });
   },

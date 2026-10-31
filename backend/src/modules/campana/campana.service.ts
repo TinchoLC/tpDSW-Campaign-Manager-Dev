@@ -51,7 +51,7 @@ export const campanaService = {
   },
 
   // Solo el master ve los NPCs de su campaña
-  async getNpcs(campanaId: number, usuarioId: number) {
+  async getNpcs(campanaId: number, usuarioId: number, estadoAgresion?: string) {
     const campana = await campanaRepository.findParaAcceso(campanaId);
     if (!campana) throw new NotFoundError("Campaña no encontrada");
 
@@ -59,7 +59,7 @@ export const campanaService = {
       throw new ForbiddenError("Solo el master puede ver los NPCs de la campaña");
     }
 
-    return personajeRepository.findNpcsByCampana(campanaId);
+    return personajeRepository.findNpcsByCampana(campanaId, estadoAgresion);
   },
 
   async update(id: number, data: UpdateCampanaDTO, usuarioId: number) {
