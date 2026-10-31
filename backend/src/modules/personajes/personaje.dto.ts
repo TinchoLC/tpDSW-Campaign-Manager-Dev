@@ -1,5 +1,5 @@
 import { z } from "zod";
-
+import { estadoAgresionEnum } from "../../lib/estadoAgresionEnum";
 // Campos que comparten tanto Jugable como NoJugable
 const camposComunes = z.object({
   nombre: z.string().min(1).max(100),
@@ -29,12 +29,11 @@ const createJugableSchema = camposComunes.extend({
 
 const createNoJugableSchema = camposComunes.extend({
   tipo: z.literal("no_jugable"),
-  estadoAgresion: z.enum(["hostil", "neutral", "amistoso"]).optional(),
+  estadoAgresion: estadoAgresionEnum.optional(), //es opcional esta propiedad porque no todos los NPCs tienen que tenerla, pero si se pasa, debe ser uno de esos tres valores
   campanaId: z.number().int().positive(), // obligatorio: los NPCs se crean directo en una campaña
 });
 
 // usuarioId NO va en ningún schema: sale del usuario autenticado, nunca del body
-
 export const createPersonajeSchema = z.discriminatedUnion("tipo", [
   createJugableSchema,
   createNoJugableSchema,

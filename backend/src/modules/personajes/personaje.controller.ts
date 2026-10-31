@@ -18,10 +18,10 @@ export const personajeController = { //controlador de personajes que tiene los m
     }
   },
 
-  async update(req: Request, res: Response, next: NextFunction) { //actualizar un personaje por id y usuario y validar que el tipo de personaje sea jugable o no jugable y usar el schema correspondiente
+  async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = idSchema.parse(req.params.id);
-      const personajeExistente = await personajeService.getOne(id);
+      const personajeExistente = await personajeService.getOneVisible(id, req.user.id); // Actualiza un personaje: valida permiso de acceso, elige el schema según el tipo y valida el body.
       const schema = personajeExistente.tipo === "jugable" ? updateJugableSchema : updateNoJugableSchema;
       const data = schema.parse(req.body);
       const personaje = await personajeService.update(id, data, req.user.id);
@@ -43,7 +43,7 @@ export const personajeController = { //controlador de personajes que tiene los m
   async getOne(req: Request, res: Response, next: NextFunction) { // Obtiene un personaje activo por su ID; el ID de ruta se valida con Zod.
     try {
       const id = idSchema.parse(req.params.id);
-      const personaje = await personajeService.getOne(id);
+      const personaje = await personajeService.getOneVisible(id, req.user.id);
       res.json(personaje);
     } catch (err) {
       next(err);
