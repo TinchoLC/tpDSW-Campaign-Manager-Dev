@@ -34,7 +34,23 @@ export interface MapaConFichas extends Mapa {
   fichas: Ficha[];
 }
 
+export interface CrearMapaDTO {
+  nombre: string;
+  descripcion?: string;
+  imagenUrl: string; // la que devuelve uploadService.subirImagen('mapas', ...)
+  columnas: number;
+  filas: number;
+}
+
 export const mapaService = {
+  // Solo el master; el mapa nace en estado "preparado"
+  crear(campanaId: number, datos: CrearMapaDTO): Promise<Mapa> {
+    return apiFetch<Mapa>(`/campanas/${campanaId}/mapas`, {
+      method: 'POST',
+      body: JSON.stringify(datos),
+    });
+  },
+
   // Lo ven el master y los jugadores; al resto le devuelve 403
   deCampana(campanaId: number): Promise<Mapa[]> {
     return apiFetch<Mapa[]>(`/campanas/${campanaId}/mapas`);
