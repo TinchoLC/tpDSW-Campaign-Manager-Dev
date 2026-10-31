@@ -3,7 +3,7 @@ import { apiFetch } from './api';
 export interface Usuario {
   id: number;
   nombre: string;
-  tipo: string;
+  tipo: string | null; // el backend lo deja en null para usuarios comunes
   imagenUrl?: string | null;
 }
 
