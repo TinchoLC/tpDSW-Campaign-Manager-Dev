@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { resolveAssetUrl } from '../services/api';
 import { CircleIcon } from './CircleIcon';
@@ -7,7 +7,12 @@ import { CircleIcon } from './CircleIcon';
 export function Header() {
   const { usuario, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [catalogoOpen, setCatalogoOpen] = useState(false);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  // Rutas que pertenecen al catálogo (para marcarlo como activo)
+  const enCatalogo = pathname.startsWith('/rasgos');
 
   const handleLogout = () => {
     logout();
@@ -57,10 +62,35 @@ export function Header() {
                 Mis personajes
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink to="/rasgos" className="nav-link">
-                Rasgos
-              </NavLink>
+            {/* Catálogo: dropdown con las secciones de contenido */}
+            <li
+              className="nav-item dropdown"
+              onBlur={(e) => {
+                // Se cierra al hacer foco fuera del dropdown
+                if (!e.currentTarget.contains(e.relatedTarget)) setCatalogoOpen(false);
+              }}
+            >
+              <button
+                type="button"
+                className={`nav-link dropdown-toggle ${enCatalogo ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation(); // que no cierre el menú hamburguesa
+                  setCatalogoOpen((prev) => !prev);
+                }}
+              >
+                Catálogo
+              </button>
+              <ul className={`dropdown-menu ${catalogoOpen ? 'show' : ''}`}>
+                <li>
+                  <NavLink
+                    to="/rasgos"
+                    className="dropdown-item"
+                    onClick={() => setCatalogoOpen(false)}
+                  >
+                    Rasgos
+                  </NavLink>
+                </li>
+              </ul>
             </li>
           </ul>
 
