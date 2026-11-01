@@ -59,4 +59,11 @@ export const mapaService = {
   conFichas(mapaId: number): Promise<MapaConFichas> {
     return apiFetch<MapaConFichas>(`/mapas/${mapaId}`);
   },
+
+  // Marca este mapa como el activo de la sesión
+  activar(id: number): Promise<Mapa> {
+    return apiFetch<Mapa>(`/mapas/${id}/activar`, {
+      method: 'POST',
+    });
+  },
 };
