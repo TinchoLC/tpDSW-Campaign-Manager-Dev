@@ -1,6 +1,9 @@
-import { useState, useRef, type ChangeEvent } from 'react';
+import { useId, useState, useRef, type ChangeEvent } from 'react';
 import { uploadService, type CategoriaImagen } from '../services/upload.service';
 import { resolveAssetUrl } from '../services/api';
+
+// Los mismos formatos que acepta el backend (upload.middleware.ts)
+const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 interface ImageUploadProps {
   tipo: CategoriaImagen;
@@ -21,6 +24,7 @@ export function ImageUpload({
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,12 +33,14 @@ export function ImageUpload({
     // Validación básica de tamaño (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('La imagen no puede superar los 5 MB.');
+      e.target.value = '';
       return;
     }
 
     // Validación de tipo
-    if (!file.type.startsWith('image/')) {
-      setError('El archivo seleccionado debe ser una imagen (PNG, JPG, WEBP, etc.).');
+    if (!TIPOS_PERMITIDOS.includes(file.type)) {
+      setError('El archivo debe ser una imagen PNG, JPG, WEBP o GIF.');
+      e.target.value = '';
       return;
     }
 
@@ -65,7 +71,9 @@ export function ImageUpload({
 
   return (
     <div className="mb-3">
-      <label className="form-label d-block">{etiqueta}</label>
+      <label htmlFor={inputId} className="form-label d-block">
+        {etiqueta}
+      </label>
 
       {/* Vista previa si hay imagen */}
       {urlCompleta && (
@@ -95,9 +103,10 @@ export function ImageUpload({
       {/* Selector de archivo */}
       <div className="d-flex align-items-center gap-2">
         <input
+          id={inputId}
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={TIPOS_PERMITIDOS.join(",")}
           className="form-control form-control-sm"
           style={{ maxWidth: '320px' }}
           onChange={handleFileChange}

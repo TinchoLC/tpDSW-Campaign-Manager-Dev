@@ -1,6 +1,6 @@
 import { Link, Navigate } from 'react-router-dom';
 import { CircleIcon } from '../components/CircleIcon';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 export function Home() {
   const { isAuthenticated } = useAuth();

@@ -4,7 +4,7 @@ import { AgresionBadge } from '../components/Badges';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { ErrorPagina } from '../components/ErrorPagina';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { personajeService } from '../services/personaje.service';
 import { mensajeError } from '../utils/form';

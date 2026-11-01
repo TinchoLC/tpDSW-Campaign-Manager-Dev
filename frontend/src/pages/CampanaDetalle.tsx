@@ -10,7 +10,7 @@ import { ModalUnirse } from '../components/ModalUnirse';
 import { NpcsPanel } from '../components/NpcsPanel';
 import { RasgosPanel } from '../components/RasgosPanel';
 import { RolBadge } from '../components/RolBadge';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { ApiError } from '../services/api';
 import { campanaService, type Campana, type EstadoCampana, type Participante } from '../services/campana.service';

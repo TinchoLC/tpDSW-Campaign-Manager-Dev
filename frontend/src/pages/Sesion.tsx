@@ -5,7 +5,7 @@ import { ErrorPagina } from '../components/ErrorPagina';
 import { EstadoBadge } from '../components/EstadoBadge';
 import { ListaFichas } from '../components/ListaFichas';
 import { TableroMapa } from '../components/TableroMapa';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { campanaService, type Campana } from '../services/campana.service';
 import { mapaService, type MapaConFichas } from '../services/mapa.service';

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Cargando } from '../components/Cargando';
 import { FiltroEstado } from '../components/FiltroEstado';
 import { TarjetaCampana } from '../components/TarjetaCampana';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { campanaService, type FiltroEstadoCampana } from '../services/campana.service';
 
