@@ -19,6 +19,7 @@ import { PersonajeForm } from './pages/PersonajeForm';
 import { Rasgos } from './pages/Rasgos';
 import { Register } from './pages/Register';
 import { Sesion } from './pages/Sesion';
+import { NotFound } from './pages/NotFound';
 
 // Mapa completo de rutas de la aplicación. Cada pantalla vive en su archivo de pages/: para
 // implementar una pantalla nueva se edita esa página, no este archivo.
@@ -69,9 +70,9 @@ function AppRoutes() {
           </Route>
         </Route>
       </Route>
-
+      
       {/* Cualquier otra ruta */}
-      <Route path="*" element={<NoEncontrado />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
