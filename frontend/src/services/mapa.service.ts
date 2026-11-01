@@ -66,4 +66,19 @@ export const mapaService = {
       method: 'POST',
     });
   },
+
+  // Actualiza un mapa existente
+  actualizar(id: number, datos: Partial<CrearMapaDTO>): Promise<Mapa> {
+    return apiFetch<Mapa>(`/mapas/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(datos),
+    });
+  },
+
+  // Da de baja un mapa
+  eliminar(id: number): Promise<void> {
+    return apiFetch<void>(`/mapas/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };

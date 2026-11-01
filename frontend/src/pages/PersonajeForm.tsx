@@ -180,9 +180,8 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
               <select
                 name="estadoAgresion"
                 className="form-select"
-                defaultValue={inicial?.estadoAgresion ?? ''}
+                defaultValue={inicial?.estadoAgresion ?? 'neutral'}
               >
-                <option value="">Sin definir</option>
                 <option value="hostil">Hostil</option>
                 <option value="neutral">Neutral</option>
                 <option value="amistoso">Amistoso</option>
@@ -204,7 +203,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
             <label className="form-label">Armadura</label>
             <input
               name="armadura"
-              type="text"
+              type="number" min={0}
               className="form-control"
               defaultValue={inicial?.armadura ?? ''}
             />
