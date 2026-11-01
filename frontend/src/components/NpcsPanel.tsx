@@ -2,21 +2,32 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { campanaService, type Campana } from '../services/campana.service';
-import { personajeService, type Personaje } from '../services/personaje.service';
+import { personajeService, type EstadoAgresion, type Personaje } from '../services/personaje.service';
 import { mensajeError } from '../utils/form';
 import { Cargando } from './Cargando';
 import { ErrorAlert } from './ErrorAlert';
 import { AgresionBadge } from './Badges';
+
+type FiltroAgresion = EstadoAgresion | 'todos';
+
+const FILTROS: { valor: FiltroAgresion; etiqueta: string }[] = [
+  { valor: 'todos', etiqueta: 'Todos' },
+  { valor: 'hostil', etiqueta: 'Hostil' },
+  { valor: 'neutral', etiqueta: 'Neutral' },
+  { valor: 'amistoso', etiqueta: 'Amistoso' },
+];
 
 interface Props {
   campana: Campana;
   escribible: boolean; // false si la campaña está finalizada o eliminada
 }
 
-// NPCs de la campaña. Solo lo muestra el master.
+// NPCs de la campaña, filtrables por actitud. Solo lo muestra el master.
 export function NpcsPanel({ campana, escribible }: Props) {
-  const { data: datos, error, loading: cargando, recargar } = useApi(`npcs-${campana.id}`, () =>
-    campanaService.npcs(campana.id)
+  const [filtro, setFiltro] = useState<FiltroAgresion>('todos');
+
+  const { data: datos, error, loading: cargando, recargar } = useApi(`npcs-${campana.id}-${filtro}`, () =>
+    campanaService.npcs(campana.id, filtro === 'todos' ? undefined : filtro)
   );
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
 
@@ -33,13 +44,30 @@ export function NpcsPanel({ campana, escribible }: Props) {
 
   return (
     <section className="mb-4">
-      <div className="d-flex justify-content-between align-items-center mb-2">
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
         <h4 className="mb-0">NPCs</h4>
-        {escribible && (
-          <Link to={`/campanas/${campana.id}/npcs/nuevo`} className="btn btn-primary btn-sm">
-            <i className="bi bi-plus-lg me-1"></i>Nuevo NPC
-          </Link>
-        )}
+
+        <div className="d-flex flex-wrap align-items-center gap-3">
+          <div className="btn-group" role="group" aria-label="Filtrar por actitud">
+            {FILTROS.map((f) => (
+              <button
+                key={f.valor}
+                type="button"
+                className={`btn btn-sm ${filtro === f.valor ? 'btn-primary' : 'btn-outline-primary'}`}
+                aria-pressed={filtro === f.valor}
+                onClick={() => setFiltro(f.valor)}
+              >
+                {f.etiqueta}
+              </button>
+            ))}
+          </div>
+
+          {escribible && (
+            <Link to={`/campanas/${campana.id}/npcs/nuevo`} className="btn btn-primary btn-sm">
+              <i className="bi bi-plus-lg me-1"></i>Nuevo NPC
+            </Link>
+          )}
+        </div>
       </div>
 
       {cargando && <Cargando />}
@@ -47,7 +75,11 @@ export function NpcsPanel({ campana, escribible }: Props) {
       {errorAccion && <ErrorAlert mensaje={errorAccion} />}
 
       {datos && datos.length === 0 && (
-        <p className="text-body-secondary">Todavía no creaste NPCs en esta campaña.</p>
+        <p className="text-body-secondary">
+          {filtro === 'todos'
+            ? 'Todavía no creaste NPCs en esta campaña.'
+            : 'No hay NPCs con esa actitud.'}
+        </p>
       )}
 
       {datos && datos.length > 0 && (
@@ -56,9 +88,8 @@ export function NpcsPanel({ campana, escribible }: Props) {
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Especie</th>
+                <th>Descripción</th>
                 <th>Actitud</th>
-                <th>Vida máx.</th>
                 <th></th>
               </tr>
             </thead>
@@ -66,9 +97,10 @@ export function NpcsPanel({ campana, escribible }: Props) {
               {datos.map((npc) => (
                 <tr key={npc.id}>
                   <td><Link to={`/personajes/${npc.id}`}>{npc.nombre}</Link></td>
-                  <td>{npc.especie ?? '—'}</td>
+                  <td className="text-truncate" style={{ maxWidth: '320px' }}>
+                    {npc.descripcion ?? '—'}
+                  </td>
                   <td><AgresionBadge estado={npc.estadoAgresion} /></td>
-                  <td>{npc.vidaMax ?? '—'}</td>
                   <td className="text-end">
                     {escribible && (
                       <div className="d-flex gap-2 justify-content-end">

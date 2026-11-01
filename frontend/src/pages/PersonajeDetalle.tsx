@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useApi } from '../hooks/useApi';
 import { personajeService } from '../services/personaje.service';
 import { mensajeError } from '../utils/form';
+import { Avatar } from '../components/Avatar';
 
 const ESTADISTICAS = [
   ['fuerza', 'Fuerza'],
@@ -54,15 +55,18 @@ export function PersonajeDetalle() {
   return (
     <main className="container py-4">
       <div className="d-flex justify-content-between align-items-start mb-3">
-        <div>
-          <h2 className="mb-1">
-            {p.nombre}{' '}
-            <span className="badge bg-secondary">{esJugable ? 'Jugable' : 'NPC'}</span>{' '}
-            {!esJugable && <AgresionBadge estado={p.estadoAgresion} />}
-          </h2>
-          <small className="text-body-secondary">
-            {[p.especie, p.clase, p.nivel ? `Nivel ${p.nivel}` : null].filter(Boolean).join(' · ')}
-          </small>
+        <div className="d-flex align-items-center gap-3">
+          <Avatar url={p.imagenUrl} alt={p.nombre} tamanio={72} />
+          <div>
+            <h2 className="mb-1">
+              {p.nombre}{' '}
+              <span className="badge bg-secondary">{esJugable ? 'Jugable' : 'NPC'}</span>{' '}
+              {!esJugable && <AgresionBadge estado={p.estadoAgresion} />}
+            </h2>
+            <small className="text-body-secondary">
+              {[p.especie, p.clase, p.nivel ? `Nivel ${p.nivel}` : null].filter(Boolean).join(' · ')}
+            </small>
+          </div>
         </div>
 
         {puedeEditar && (

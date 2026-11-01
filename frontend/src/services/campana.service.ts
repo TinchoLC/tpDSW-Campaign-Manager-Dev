@@ -1,5 +1,5 @@
 import { apiFetch } from './api';
-import type { Personaje } from './personaje.service';
+import type { EstadoAgresion, Personaje } from './personaje.service';
 
 export const ESTADOS_CAMPANA = ['planificada', 'activa', 'pausada', 'finalizada'] as const;
 export type EstadoCampana = (typeof ESTADOS_CAMPANA)[number];
@@ -76,9 +76,10 @@ export const campanaService = {
     return apiFetch<void>(`/campanas/${id}`, { method: 'DELETE' });
   },
 
-  // NPCs de la campaña (por ahora solo los ve el master)
-  npcs(id: number): Promise<Personaje[]> {
-    return apiFetch<Personaje[]>(`/campanas/${id}/npcs`);
+  // NPCs de la campaña (por ahora solo los ve el master). Sin estadoAgresion devuelve todos
+  npcs(id: number, estadoAgresion?: EstadoAgresion): Promise<Personaje[]> {
+    const query = estadoAgresion ? `?estadoAgresion=${encodeURIComponent(estadoAgresion)}` : '';
+    return apiFetch<Personaje[]>(`/campanas/${id}/npcs${query}`);
   },
 
   // Solo responde para el master y los jugadores; al resto le devuelve 403
