@@ -15,6 +15,7 @@ import { Rasgos } from './pages/Rasgos';
 import { Register } from './pages/Register';
 import { Sesion } from './pages/Sesion';
 import { Layout } from './components/Layout';
+import { NotFound } from './pages/NotFound';
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -53,7 +54,7 @@ function AppRoutes() {
         <Route path="/perfil" element={<Perfil />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
