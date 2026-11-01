@@ -41,6 +41,7 @@ export interface PersonajeDetalle extends Personaje {
 
 // Al crear se manda "tipo" (y "campanaId" si es NPC). Al editar no se pueden cambiar.
 export interface PersonajeInput {
+  imagenUrl?: string | null;
   tipo?: TipoPersonaje;
   campanaId?: number;
   nombre?: string;

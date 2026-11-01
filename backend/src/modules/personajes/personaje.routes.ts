@@ -66,6 +66,32 @@ router.get("/:id", personajeController.getOne);
 
 router.patch("/:id", personajeController.update);
 
+/**
+ * @swagger
+ * /personajes/{id}:
+ *   delete:
+ *     summary: Eliminar un personaje
+ *     tags: [Personajes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Personaje eliminado correctamente
+ *       401:
+ *         description: Token inválido o ausente
+ *       403:
+ *         description: No tiene permisos para eliminar este personaje
+ *       404:
+ *         description: Personaje no encontrado
+ *       409:
+ *         description: El personaje ya fue eliminado o no puede eliminarse
+ */
+
+
 router.delete("/:id", personajeController.delete);
 
 export default router;

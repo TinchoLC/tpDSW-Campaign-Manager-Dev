@@ -7,6 +7,7 @@ import { mensajeError } from '../utils/form';
 import { Cargando } from './Cargando';
 import { ErrorAlert } from './ErrorAlert';
 import { AgresionBadge } from './Badges';
+import { Avatar } from './Avatar';
 
 interface Props {
   campana: Campana;
@@ -65,7 +66,7 @@ export function NpcsPanel({ campana, escribible }: Props) {
             <tbody>
               {datos.map((npc) => (
                 <tr key={npc.id}>
-                  <td><Link to={`/personajes/${npc.id}`}>{npc.nombre}</Link></td>
+                  <td><div className="d-flex align-items-center gap-2"><Avatar url={npc.imagenUrl} nombre={npc.nombre} tamanio={32} /><Link to={`/personajes/${npc.id}`}>{npc.nombre}</Link></div></td>
                   <td>{npc.especie ?? '—'}</td>
                   <td><AgresionBadge estado={npc.estadoAgresion} /></td>
                   <td>{npc.vidaMax ?? '—'}</td>

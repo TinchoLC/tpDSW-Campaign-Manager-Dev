@@ -19,7 +19,7 @@ export function ListaParticipantes({ participantes, puedeDesvincular, onDesvincu
     <ul className="list-group">
       {participantes.map((p) => (
         <li key={p.id} className="list-group-item d-flex align-items-center gap-3">
-          <Avatar url={p.personaje.imagenUrl} tamanio={40} />
+          <Avatar url={p.personaje.imagenUrl} nombre={p.nombre} tamanio={40} />
 
           <div className="flex-grow-1">
             <div className="fw-semibold">{p.nombre}</div>

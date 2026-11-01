@@ -33,6 +33,7 @@ interface FormularioProps {
 function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [imagenUrl, setImagenUrl] = useState<string | null>(inicial?.imagenUrl ?? null);
   const navigate = useNavigate();
 
   const esEdicion = inicial !== undefined;
@@ -64,6 +65,12 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
       sabiduria: num(fd, 'sabiduria'),
     };
 
+    if (imagenUrl) {
+      datos.imagenUrl = imagenUrl;
+    } else if (esEdicion) {
+      datos.imagenUrl = null;
+    }
+
     if (esJugable) {
       datos.clase = texto('clase');
       datos.nivel = num(fd, 'nivel');
@@ -71,7 +78,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
       datos.experiencia = num(fd, 'experiencia');
       datos.oro = num(fd, 'oro');
     } else {
-      datos.estadoAgresion = (txt(fd, 'estadoAgresion') as EstadoAgresion | undefined);
+      datos.estadoAgresion = txt(fd, 'estadoAgresion') as EstadoAgresion | undefined;
     }
 
     // El tipo y la campaña solo se definen al crear
@@ -103,41 +110,77 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
 
       <form onSubmit={handleSubmit} className="card p-4">
         <div className="row g-3">
+          <div className="col-12">
+            <ImageUpload
+              tipo="personajes"
+              valorInicial={inicial?.imagenUrl}
+              onChange={setImagenUrl}
+              etiqueta={`Imagen del ${esJugable ? 'personaje' : 'NPC'} (opcional)`}
+              forma="circulo"
+            />
+          </div>
+
           <div className="col-md-6">
             <label className="form-label">Nombre</label>
-            <input name="nombre" type="text" className="form-control" maxLength={100}
-              defaultValue={inicial?.nombre} required />
+            <input
+              name="nombre"
+              type="text"
+              className="form-control"
+              maxLength={100}
+              defaultValue={inicial?.nombre}
+              required
+            />
           </div>
           <div className="col-md-6">
             <label className="form-label">Especie</label>
-            <input name="especie" type="text" className="form-control"
-              defaultValue={inicial?.especie ?? ''} />
+            <input
+              name="especie"
+              type="text"
+              className="form-control"
+              defaultValue={inicial?.especie ?? ''}
+            />
           </div>
 
           <div className="col-12">
             <label className="form-label">Descripción</label>
-            <textarea name="descripcion" className="form-control" rows={2}
-              defaultValue={inicial?.descripcion ?? ''} />
+            <textarea
+              name="descripcion"
+              className="form-control"
+              rows={2}
+              defaultValue={inicial?.descripcion ?? ''}
+            />
           </div>
 
           {esJugable ? (
             <>
               <div className="col-md-6">
                 <label className="form-label">Clase</label>
-                <input name="clase" type="text" className="form-control"
-                  defaultValue={inicial?.clase ?? ''} />
+                <input
+                  name="clase"
+                  type="text"
+                  className="form-control"
+                  defaultValue={inicial?.clase ?? ''}
+                />
               </div>
               <div className="col-md-6">
                 <label className="form-label">Nivel</label>
-                <input name="nivel" type="number" className="form-control" min={1}
-                  defaultValue={inicial?.nivel ?? 1} />
+                <input
+                  name="nivel"
+                  type="number"
+                  className="form-control"
+                  min={1}
+                  defaultValue={inicial?.nivel ?? 1}
+                />
               </div>
             </>
           ) : (
             <div className="col-md-6">
               <label className="form-label">Actitud</label>
-              <select name="estadoAgresion" className="form-select"
-                defaultValue={inicial?.estadoAgresion ?? ''}>
+              <select
+                name="estadoAgresion"
+                className="form-select"
+                defaultValue={inicial?.estadoAgresion ?? ''}
+              >
                 <option value="">Sin definir</option>
                 <option value="hostil">Hostil</option>
                 <option value="neutral">Neutral</option>
@@ -148,41 +191,73 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
 
           <div className="col-md-3">
             <label className="form-label">Vida máxima</label>
-            <input name="vidaMax" type="number" className="form-control" min={1}
-              defaultValue={inicial?.vidaMax ?? ''} />
+            <input
+              name="vidaMax"
+              type="number"
+              className="form-control"
+              min={1}
+              defaultValue={inicial?.vidaMax ?? ''}
+            />
           </div>
           <div className="col-md-3">
             <label className="form-label">Armadura</label>
-            <input name="armadura" type="text" className="form-control"
-              defaultValue={inicial?.armadura ?? ''} />
+            <input
+              name="armadura"
+              type="text"
+              className="form-control"
+              defaultValue={inicial?.armadura ?? ''}
+            />
           </div>
           <div className="col-md-3">
             <label className="form-label">Iniciativa</label>
-            <input name="iniciativa" type="number" className="form-control"
-              defaultValue={inicial?.iniciativa ?? ''} />
+            <input
+              name="iniciativa"
+              type="number"
+              className="form-control"
+              defaultValue={inicial?.iniciativa ?? ''}
+            />
           </div>
           <div className="col-md-3">
             <label className="form-label">Velocidad</label>
-            <input name="velocidad" type="number" className="form-control"
-              defaultValue={inicial?.velocidad ?? ''} />
+            <input
+              name="velocidad"
+              type="number"
+              className="form-control"
+              defaultValue={inicial?.velocidad ?? ''}
+            />
           </div>
 
           {esJugable && (
             <>
               <div className="col-md-4">
                 <label className="form-label">Maná máximo</label>
-                <input name="manaMax" type="number" className="form-control" min={0}
-                  defaultValue={inicial?.manaMax ?? ''} />
+                <input
+                  name="manaMax"
+                  type="number"
+                  className="form-control"
+                  min={0}
+                  defaultValue={inicial?.manaMax ?? ''}
+                />
               </div>
               <div className="col-md-4">
                 <label className="form-label">Experiencia</label>
-                <input name="experiencia" type="number" className="form-control" min={0}
-                  defaultValue={inicial?.experiencia ?? ''} />
+                <input
+                  name="experiencia"
+                  type="number"
+                  className="form-control"
+                  min={0}
+                  defaultValue={inicial?.experiencia ?? ''}
+                />
               </div>
               <div className="col-md-4">
                 <label className="form-label">Oro</label>
-                <input name="oro" type="number" className="form-control" min={0}
-                  defaultValue={inicial?.oro ?? ''} />
+                <input
+                  name="oro"
+                  type="number"
+                  className="form-control"
+                  min={0}
+                  defaultValue={inicial?.oro ?? ''}
+                />
               </div>
             </>
           )}
@@ -190,8 +265,13 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
           {ESTADISTICAS.map(([clave, etiqueta]) => (
             <div key={clave} className="col-6 col-md-2">
               <label className="form-label">{etiqueta}</label>
-              <input name={clave} type="number" className="form-control" min={1}
-                defaultValue={inicial?.[clave] ?? ''} />
+              <input
+                name={clave}
+                type="number"
+                className="form-control"
+                min={1}
+                defaultValue={inicial?.[clave] ?? ''}
+              />
             </div>
           ))}
         </div>
@@ -211,20 +291,33 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
 
 function EditarPersonaje({ id }: { id: number }) {
   const { usuario } = useAuth();
-  const { data: datos, error, loading: cargando } = useApi(`personaje-${id}`, () => personajeService.obtener(id));
+  const { data: datos, error, loading: cargando } = useApi(`personaje-${id}`, () =>
+    personajeService.obtener(id)
+  );
 
   if (cargando) return <Cargando pagina />;
   if (error || !datos) {
-    return <ErrorPagina mensaje={error?.message ?? 'Personaje no encontrado'} volverA="/personajes" textoVolver="← Volver a mis personajes" />;
+    return (
+      <ErrorPagina
+        mensaje={error?.message ?? 'Personaje no encontrado'}
+        volverA="/personajes"
+        textoVolver="← Volver a mis personajes"
+      />
+    );
   }
 
   const p: PersonajeDetalle = datos;
-  const puedeEditar = p.tipo === 'jugable'
-    ? p.usuarioId === usuario?.id
-    : p.campana?.usuarioId === usuario?.id;
+  const puedeEditar =
+    p.tipo === 'jugable' ? p.usuarioId === usuario?.id : p.campana?.usuarioId === usuario?.id;
 
   if (!puedeEditar) {
-    return <ErrorPagina mensaje="No tenés permiso para editar este personaje" volverA="/personajes" textoVolver="← Volver a mis personajes" />;
+    return (
+      <ErrorPagina
+        mensaje="No tenés permiso para editar este personaje"
+        volverA="/personajes"
+        textoVolver="← Volver a mis personajes"
+      />
+    );
   }
 
   return <Formulario tipo={p.tipo} inicial={p} />;

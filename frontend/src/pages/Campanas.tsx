@@ -10,8 +10,8 @@ import { campanaService, type FiltroEstadoCampana } from '../services/campana.se
 export function Campanas() {
   const { usuario } = useAuth();
 
-  // Por defecto mostramos solo las campañas activas
-  const [filtro, setFiltro] = useState<FiltroEstadoCampana>('activa');
+  // Por defecto mostramos todas las campañas
+  const [filtro, setFiltro] = useState<FiltroEstadoCampana>('todas');
 
   const { data: campanas, error, loading } = useApi(`campanas-${filtro}`, () =>
     campanaService.listar(filtro === 'todas' ? undefined : filtro)

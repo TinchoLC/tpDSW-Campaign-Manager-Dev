@@ -3,13 +3,15 @@ import type { Ficha } from '../services/mapa.service';
 
 // Una ficha es de un jugador (personajeCampana) o de un NPC (personaje)
 export function nombreDeFicha(ficha: Ficha): string {
-  return ficha.personajeCampana?.nombre ?? ficha.personaje?.nombre ?? 'Ficha';
+  return (ficha.personajeCampana ? ficha.personajeCampana.nombre : ficha.personaje!.nombre);
 }
 
 export function imagenDeFicha(ficha: Ficha): string | null {
-  return resolveAssetUrl(
-    ficha.imagenUrl ?? ficha.personajeCampana?.personaje.imagenUrl ?? ficha.personaje?.imagenUrl
-  );
+  const url = ficha.imagenUrl ?? (ficha.personajeCampana
+    ? ficha.personajeCampana.personaje.imagenUrl
+    : ficha.personaje!.imagenUrl);
+
+  return resolveAssetUrl(url);
 }
 
 export function esNpc(ficha: Ficha): boolean {
