@@ -1,26 +1,36 @@
-import { useMemo } from 'react';
 import { resolveAssetUrl } from '../services/api';
 
 interface AvatarProps {
   url?: string | null;
-  nombre: string;
+  nombre?: string;
   alt?: string;
-  tamanio?: number; // en píxeles
+  tamanio?: number;
   forma?: 'circulo' | 'cuadrado';
   className?: string;
 }
 
 const COLORES = [
-  '#0d6efd', // azul
-  '#6610f2', // índigo
-  '#6f42c1', // violeta
-  '#d63384', // rosa
-  '#dc3545', // rojo
-  '#fd7e14', // naranja
-  '#198754', // verde
-  '#20c997', // verde azulado
-  '#0dcaf0', // cian
+  '#0d6efd',
+  '#6610f2',
+  '#6f42c1',
+  '#d63384',
+  '#dc3545',
+  '#fd7e14',
+  '#198754',
+  '#20c997',
+  '#0dcaf0',
 ];
+
+// El color sale del nombre, así la misma persona se ve igual en todas las pantallas
+function colorPorNombre(nombre: string) {
+  let hash = 0;
+
+  for (const caracter of nombre) {
+    hash = (hash * 31 + caracter.charCodeAt(0)) >>> 0;
+  }
+
+  return COLORES[hash % COLORES.length];
+}
 
 export function Avatar({
   url,
@@ -32,15 +42,14 @@ export function Avatar({
 }: AvatarProps) {
   const src = resolveAssetUrl(url);
 
-  // Elegir un color aleatorio entre los disponibles para este render
-  const bg = useMemo(() => COLORES[Math.floor(Math.random() * COLORES.length)], []);
+  const claseForma = forma === 'circulo' ? 'rounded-circle' : 'rounded';
 
   if (src) {
     return (
       <img
         src={src}
-        alt={alt || nombre}
-        className={`${forma === 'circulo' ? 'rounded-circle' : 'rounded'} ${className}`}
+        alt={alt || nombre || ''}
+        className={`${claseForma} ${className}`}
         style={{
           width: `${tamanio}px`,
           height: `${tamanio}px`,
@@ -50,11 +59,21 @@ export function Avatar({
     );
   }
 
+  // Si no hay imagen ni nombre, muestra el ícono genérico
+  if (!nombre) {
+    return (
+      <i
+        className={`bi bi-person-circle text-body-secondary ${className}`}
+        style={{ fontSize: `${tamanio}px`, lineHeight: 1 }}
+      />
+    );
+  }
+
+  const bg = colorPorNombre(nombre);
+
   return (
     <div
-      className={`d-inline-flex align-items-center justify-content-center text-white fw-bold user-select-none ${
-        forma === 'circulo' ? 'rounded-circle' : 'rounded'
-      } ${className}`}
+      className={`d-inline-flex align-items-center justify-content-center text-white fw-bold user-select-none ${claseForma} ${className}`}
       style={{
         width: `${tamanio}px`,
         height: `${tamanio}px`,

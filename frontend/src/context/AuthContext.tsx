@@ -1,37 +1,24 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { setUnauthorizedHandler } from '../services/api';
 import { authService, type CredentialsDTO, type Usuario } from '../services/auth.service';
-
-interface AuthContextType {
-  usuario: Usuario | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (credenciales: CredentialsDTO) => Promise<void>;
-  register: (datos: CredentialsDTO) => Promise<void>;
-  logout: () => void;
-  actualizarUsuario: (usuario: Usuario) => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import {
+  guardarSesion,
+  guardarUsuario,
+  leerSesion,
+  limpiarSesion,
+  type SesionGuardada,
+} from '../utils/sesion';
+import { AuthContext } from './auth.context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Leemos si ya había un token y un usuario guardados en localStorage
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('token');
-  });
-
-  const [usuario, setUsuario] = useState<Usuario | null>(() => {
-    const guardado = localStorage.getItem('usuario');
-    return guardado ? JSON.parse(guardado) : null;
-  });
+  // Si había una sesión guardada la retomamos; si estaba corrupta, leerSesion la descarta
+  const [sesion, setSesion] = useState<SesionGuardada>(leerSesion);
 
   // Iniciar sesión
   const login = async (credenciales: CredentialsDTO) => {
     const respuesta = await authService.login(credenciales);
-    localStorage.setItem('token', respuesta.token);
-    localStorage.setItem('usuario', JSON.stringify(respuesta.usuario));
-    setToken(respuesta.token);
-    setUsuario(respuesta.usuario);
+    guardarSesion(respuesta.token, respuesta.usuario);
+    setSesion({ token: respuesta.token, usuario: respuesta.usuario });
   };
 
   // Cuando te registras te logeas después de registrarte automáticamente
@@ -42,16 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Cerrar sesión
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    setToken(null);
-    setUsuario(null);
+    limpiarSesion();
+    setSesion({ token: null, usuario: null });
   }, []);
 
   // Actualiza los datos de la sesión (por ejemplo el nombre tras editar el perfil)
   const actualizarUsuario = useCallback((nuevo: Usuario) => {
-    localStorage.setItem('usuario', JSON.stringify(nuevo));
-    setUsuario(nuevo);
+    guardarUsuario(nuevo);
+    setSesion((actual) => ({ ...actual, usuario: nuevo }));
   }, []);
 
   // Si la API responde 401 con un token guardado (vencido o inválido), cerramos la sesión
@@ -64,9 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        usuario,
-        token,
-        isAuthenticated: Boolean(token && usuario),
+        usuario: sesion.usuario,
+        token: sesion.token,
+        isAuthenticated: Boolean(sesion.token && sesion.usuario),
         login,
         register,
         logout,
@@ -76,13 +61,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-// Hook para el contexto 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth debe usarse dentro de un AuthProvider');
-  }
-  return context;
 }

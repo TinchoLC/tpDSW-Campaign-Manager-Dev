@@ -4,7 +4,7 @@ import { Cargando } from '../components/Cargando';
 import { ErrorPagina } from '../components/ErrorPagina';
 import { ImageUpload } from '../components/ImageUpload';
 import { VistaPreviaMapa } from '../components/VistaPreviaMapa';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { resolveAssetUrl } from '../services/api';
 import { campanaService, type Campana } from '../services/campana.service';

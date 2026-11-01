@@ -3,8 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { ErrorPagina } from '../components/ErrorPagina';
-import { ImageUpload } from '../components/ImageUpload';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import {
   personajeService,
@@ -15,6 +14,7 @@ import {
   type TipoPersonaje,
 } from '../services/personaje.service';
 import { mensajeError, num, txt } from '../utils/form';
+import { ImageUpload } from '../components/ImageUpload';
 
 const ESTADISTICAS = [
   ['fuerza', 'Fuerza'],

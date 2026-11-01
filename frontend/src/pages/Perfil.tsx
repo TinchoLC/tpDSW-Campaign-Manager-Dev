@@ -1,9 +1,9 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { ErrorPagina } from '../components/ErrorPagina';
 import { ImageUpload } from '../components/ImageUpload';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { usuarioService, type UpdateUsuarioDTO } from '../services/usuario.service';
 import { mensajeError } from '../utils/form';
@@ -19,14 +19,11 @@ export function Perfil() {
   const [errorForm, setErrorForm] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
-  const [imagenUrl, setImagenUrl] = useState<string | null>(null);
+  // Solo guardamos lo que el usuario eligió (undefined = no tocó la imagen)
+  const [imagenElegida, setImagenElegida] = useState<string | null | undefined>(undefined);
 
-  // Sincronizar estado inicial de la imagen cuando cargue el perfil
-  useEffect(() => {
-    if (perfil) {
-      setImagenUrl(perfil.imagenUrl ?? null);
-    }
-  }, [perfil]);
+  // Mientras no la toque, vale la imagen del perfil
+  const imagenUrl = imagenElegida === undefined ? (perfil?.imagenUrl ?? null) : imagenElegida;
 
   if (cargando) return <Cargando pagina />;
   if (error || !perfil || !usuario) {
@@ -109,7 +106,7 @@ export function Perfil() {
         <ImageUpload
           tipo="usuarios"
           valorInicial={perfil.imagenUrl}
-          onChange={setImagenUrl}
+          onChange={setImagenElegida}
           etiqueta="Foto de perfil / Avatar"
           forma="circulo"
         />

@@ -1,10 +1,10 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { ErrorPagina } from '../components/ErrorPagina';
 import { ImageUpload } from '../components/ImageUpload';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { campanaService, type Campana, type CampanaInput } from '../services/campana.service';
 import { mensajeError } from '../utils/form';
@@ -19,18 +19,16 @@ export function CampanaForm() {
 
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
-  const [imagenUrl, setImagenUrl] = useState<string | null>(null);
+  // Solo guardamos lo que el usuario eligió (undefined = no tocó la imagen)
+  const [imagenElegida, setImagenElegida] = useState<string | null | undefined>(undefined);
 
   const { data: inicial, error: errorCarga, loading } = useApi<Campana | null>(
     `campana-${campanaId ?? 'nueva'}`,
     () => (campanaId ? campanaService.obtener(campanaId) : Promise.resolve(null))
   );
 
-  useEffect(() => {
-    if (inicial) {
-      setImagenUrl(inicial.imagenUrl ?? null);
-    }
-  }, [inicial]);
+  // Mientras no la toque, vale la imagen de la campaña
+  const imagenUrl = imagenElegida === undefined ? (inicial?.imagenUrl ?? null) : imagenElegida;
 
   if (loading) return <Cargando pagina />;
 
@@ -112,7 +110,7 @@ export function CampanaForm() {
         <ImageUpload
           tipo="campanas"
           valorInicial={inicial?.imagenUrl}
-          onChange={setImagenUrl}
+          onChange={setImagenElegida}
           etiqueta="Imagen de portada"
           forma="rectangulo"
         />
