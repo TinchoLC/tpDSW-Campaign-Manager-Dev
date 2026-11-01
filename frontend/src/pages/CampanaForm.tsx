@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
@@ -9,17 +9,51 @@ import { useApi } from '../hooks/useApi';
 import { campanaService, type Campana, type CampanaInput } from '../services/campana.service';
 import { mensajeError } from '../utils/form';
 
-interface FormularioProps {
-  titulo: string;
-  inicial?: Campana;
-  onGuardar: (datos: CampanaInput) => Promise<Campana>;
-}
+export function CampanaForm() {
+  const { id } = useParams();
+  const campanaId = id ? Number(id) : null;
+  const esEdicion = Boolean(campanaId);
 
-function Formulario({ titulo, inicial, onGuardar }: FormularioProps) {
+  const { usuario } = useAuth();
+  const navigate = useNavigate();
+
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
-  const [imagenUrl, setImagenUrl] = useState<string | null>(inicial?.imagenUrl ?? null);
-  const navigate = useNavigate();
+  const [imagenUrl, setImagenUrl] = useState<string | null>(null);
+
+  const { data: inicial, error: errorCarga, loading } = useApi<Campana | null>(
+    `campana-${campanaId ?? 'nueva'}`,
+    () => (campanaId ? campanaService.obtener(campanaId) : Promise.resolve(null))
+  );
+
+  useEffect(() => {
+    if (inicial) {
+      setImagenUrl(inicial.imagenUrl ?? null);
+    }
+  }, [inicial]);
+
+  if (loading) return <Cargando pagina />;
+
+  if (esEdicion) {
+    if (errorCarga || !inicial) {
+      return (
+        <ErrorPagina
+          mensaje={errorCarga?.message ?? 'Campaña no encontrada'}
+          volverA="/campanas"
+          textoVolver="← Volver a las campañas"
+        />
+      );
+    }
+    if (inicial.usuarioId !== usuario?.id) {
+      return (
+        <ErrorPagina
+          mensaje="Solo el master puede editar la campaña"
+          volverA="/campanas"
+          textoVolver="← Volver a las campañas"
+        />
+      );
+    }
+  }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,13 +65,13 @@ function Formulario({ titulo, inicial, onGuardar }: FormularioProps) {
       const datos: CampanaInput = {
         nombre: String(fd.get('nombre') || '').trim(),
         descripcion: String(fd.get('descripcion') || '').trim(),
+        imagenUrl: imagenUrl || null,
       };
-      if (imagenUrl) {
-        datos.imagenUrl = imagenUrl;
-      } else if (inicial) {
-        datos.imagenUrl = null;
-      }
-      const campana = await onGuardar(datos);
+
+      const campana = esEdicion
+        ? await campanaService.actualizar(campanaId!, datos)
+        : await campanaService.crear(datos);
+
       navigate(`/campanas/${campana.id}`);
     } catch (err) {
       setError(mensajeError(err));
@@ -47,7 +81,7 @@ function Formulario({ titulo, inicial, onGuardar }: FormularioProps) {
 
   return (
     <main className="container py-4" style={{ maxWidth: '600px' }}>
-      <h2 className="mb-4">{titulo}</h2>
+      <h2 className="mb-4">{esEdicion ? 'Editar campaña' : 'Nueva campaña'}</h2>
 
       {error && <ErrorAlert mensaje={error} />}
 
@@ -68,7 +102,7 @@ function Formulario({ titulo, inicial, onGuardar }: FormularioProps) {
           <label className="form-label">Descripción</label>
           <textarea
             name="descripcion"
-            className="form-control"
+            className="control-textarea form-control"
             rows={4}
             maxLength={500}
             defaultValue={inicial?.descripcion ?? ''}
@@ -94,45 +128,4 @@ function Formulario({ titulo, inicial, onGuardar }: FormularioProps) {
       </form>
     </main>
   );
-}
-
-function EditarCampana({ id }: { id: number }) {
-  const { usuario } = useAuth();
-  const { data: datos, error, loading: cargando } = useApi(`campana-${id}`, () => campanaService.obtener(id));
-
-  if (cargando) return <Cargando pagina />;
-  if (error || !datos) {
-    return (
-      <ErrorPagina
-        mensaje={error?.message ?? 'Campaña no encontrada'}
-        volverA="/campanas"
-        textoVolver="← Volver a las campañas"
-      />
-    );
-  }
-  if (datos.usuarioId !== usuario?.id) {
-    return (
-      <ErrorPagina
-        mensaje="Solo el master puede editar la campaña"
-        volverA="/campanas"
-        textoVolver="← Volver a las campañas"
-      />
-    );
-  }
-
-  return (
-    <Formulario
-      titulo="Editar campaña"
-      inicial={datos}
-      onGuardar={(cambios) => campanaService.actualizar(id, cambios)}
-    />
-  );
-}
-
-// /campanas/nueva crea; /campanas/:id/editar edita
-export function CampanaForm() {
-  const { id } = useParams();
-
-  if (id) return <EditarCampana id={Number(id)} />;
-  return <Formulario titulo="Nueva campaña" onGuardar={campanaService.crear} />;
 }

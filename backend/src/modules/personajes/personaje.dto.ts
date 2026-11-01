@@ -5,7 +5,7 @@ const camposComunes = z.object({
   nombre: z.string().min(1).max(100),
   descripcion: z.string().optional(),
   especie: z.string().optional(),
-  imagenUrl: z.string().optional(),
+  imagenUrl: z.string().nullable().optional(),
   armadura: z.string().optional(),
   iniciativa: z.number().int().optional(),
   velocidad: z.number().int().optional(),
@@ -29,11 +29,12 @@ const createJugableSchema = camposComunes.extend({
 
 const createNoJugableSchema = camposComunes.extend({
   tipo: z.literal("no_jugable"),
-  estadoAgresion: estadoAgresionEnum.optional(), //es opcional esta propiedad porque no todos los NPCs tienen que tenerla, pero si se pasa, debe ser uno de esos tres valores
+  estadoAgresion: estadoAgresionEnum.optional(),
   campanaId: z.number().int().positive(), // obligatorio: los NPCs se crean directo en una campaña
 });
 
 // usuarioId NO va en ningún schema: sale del usuario autenticado, nunca del body
+
 export const createPersonajeSchema = z.discriminatedUnion("tipo", [
   createJugableSchema,
   createNoJugableSchema,

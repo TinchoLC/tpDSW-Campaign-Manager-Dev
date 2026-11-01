@@ -14,9 +14,9 @@ export function Header() {
     navigate('/login');
   };
 
-  if (!usuario) return null;
 
-  const userAvatarUrl = resolveAssetUrl(usuario.imagenUrl);
+
+  const userAvatarUrl = resolveAssetUrl(usuario?.imagenUrl);
 
   return (
     <header
@@ -73,14 +73,14 @@ export function Header() {
               {userAvatarUrl ? (
                 <img
                   src={userAvatarUrl}
-                  alt={usuario.nombre}
+                  alt={usuario?.nombre}
                   className="rounded-circle shadow-sm"
                   style={{ width: '28px', height: '28px', objectFit: 'cover' }}
                 />
               ) : (
                 <i className="bi bi-person-circle fs-5 text-secondary" />
               )}
-              <span className="fw-medium">{usuario.nombre}</span>
+              <span className="fw-medium">{usuario?.nombre}</span>
             </NavLink>
 
             <button

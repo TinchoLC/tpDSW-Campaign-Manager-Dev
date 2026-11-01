@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Avatar } from '../components/Avatar';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { useApi } from '../hooks/useApi';
@@ -44,12 +45,15 @@ export function MisPersonajes() {
           {datos.map((p) => (
             <div key={p.id} className="col">
               <div className="card h-100">
-                <div className="card-body">
-                  <h5 className="card-title">{p.nombre}</h5>
-                  <h6 className="card-subtitle mb-2 text-body-secondary">
-                    {[p.especie, p.clase, p.nivel ? `Nivel ${p.nivel}` : null].filter(Boolean).join(' · ') || 'Sin datos'}
-                  </h6>
-                  {p.descripcion && <p className="card-text">{p.descripcion}</p>}
+                <div className="card-body d-flex gap-3 align-items-start">
+                  <Avatar url={p.imagenUrl} nombre={p.nombre} tamanio={54} />
+                  <div className="flex-grow-1">
+                    <h5 className="card-title mb-1">{p.nombre}</h5>
+                    <h6 className="card-subtitle mb-2 text-body-secondary">
+                      {[p.especie, p.clase, p.nivel ? `Nivel ${p.nivel}` : null].filter(Boolean).join(' · ') || 'Sin datos'}
+                    </h6>
+                    {p.descripcion && <p className="card-text small mb-0">{p.descripcion}</p>}
+                  </div>
                 </div>
                 <div className="card-footer d-flex gap-2">
                   <Link to={`/personajes/${p.id}`} className="btn btn-outline-primary btn-sm">Ver</Link>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AgresionBadge } from '../components/Badges';
+import { Avatar } from '../components/Avatar';
 import { Cargando } from '../components/Cargando';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { ErrorPagina } from '../components/ErrorPagina';
@@ -54,15 +55,18 @@ export function PersonajeDetalle() {
   return (
     <main className="container py-4">
       <div className="d-flex justify-content-between align-items-start mb-3">
-        <div>
-          <h2 className="mb-1">
-            {p.nombre}{' '}
-            <span className="badge bg-secondary">{esJugable ? 'Jugable' : 'NPC'}</span>{' '}
-            {!esJugable && <AgresionBadge estado={p.estadoAgresion} />}
-          </h2>
-          <small className="text-body-secondary">
-            {[p.especie, p.clase, p.nivel ? `Nivel ${p.nivel}` : null].filter(Boolean).join(' · ')}
-          </small>
+        <div className="d-flex align-items-center gap-3">
+          <Avatar url={p.imagenUrl} nombre={p.nombre} tamanio={64} />
+          <div>
+            <h2 className="mb-1">
+              {p.nombre}{' '}
+              <span className="badge bg-secondary">{esJugable ? 'Jugable' : 'NPC'}</span>{' '}
+              {!esJugable && <AgresionBadge estado={p.estadoAgresion} />}
+            </h2>
+            <small className="text-body-secondary">
+              {[p.especie, p.clase, p.nivel ? `Nivel ${p.nivel}` : null].filter(Boolean).join(' · ')}
+            </small>
+          </div>
         </div>
 
         {puedeEditar && (
