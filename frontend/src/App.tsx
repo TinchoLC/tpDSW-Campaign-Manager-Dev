@@ -12,7 +12,6 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { MapEditor } from './pages/MapEditor';
 import { MisPersonajes } from './pages/MisPersonajes';
-import { NoEncontrado } from './pages/NoEncontrado';
 import { Perfil } from './pages/Perfil';
 import { PersonajeDetalle } from './pages/PersonajeDetalle';
 import { PersonajeForm } from './pages/PersonajeForm';
