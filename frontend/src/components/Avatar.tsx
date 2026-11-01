@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { resolveAssetUrl } from '../services/api';
 
 interface AvatarProps {

@@ -14,6 +14,7 @@ import {
   type TipoPersonaje,
 } from '../services/personaje.service';
 import { mensajeError, num, txt } from '../utils/form';
+import { ImageUpload } from '../components/ImageUpload';
 
 const ESTADISTICAS = [
   ['fuerza', 'Fuerza'],
