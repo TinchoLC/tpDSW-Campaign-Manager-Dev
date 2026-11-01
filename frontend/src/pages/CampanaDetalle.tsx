@@ -16,6 +16,7 @@ import { ApiError } from '../services/api';
 import { campanaService, type Campana, type EstadoCampana, type Participante } from '../services/campana.service';
 import { personajeService, type PersonajeJugable } from '../services/personaje.service';
 import { mensajeError } from '../utils/form';
+import { MapasPanel } from '../components/MapasPanel';
 
 // Mismas transiciones que valida el backend: planificada → activa ⇄ pausada, activa → finalizada
 const TRANSICIONES: Record<EstadoCampana, { estado: EstadoCampana; texto: string; clase: string }[]> = {
@@ -255,6 +256,11 @@ export function CampanaDetalle() {
         <div className="mt-4">
           <RasgosPanel titulo="Rasgos" campanaId={campana.id} esMaster={esMaster && escribible} />
         </div>
+      )}
+      {puedeEntrar && (
+      <div className="mt-4">
+        <MapasPanel campanaId={campana.id} esMaster={esMaster} escribible={escribible} />
+      </div>
       )}
 
       {modalAbierto && (

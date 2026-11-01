@@ -48,7 +48,7 @@ export function NpcsPanel({ campana, escribible }: Props) {
       {errorAccion && <ErrorAlert mensaje={errorAccion} />}
 
       {datos && datos.length === 0 && (
-        <p className="text-body-secondary">Todavía no creaste NPCs en esta campaña.</p>
+        <p className="text-body-secondary">No hay NPCs para mostrar.</p>
       )}
 
       {datos && datos.length > 0 && (
@@ -59,7 +59,6 @@ export function NpcsPanel({ campana, escribible }: Props) {
                 <th>Nombre</th>
                 <th>Especie</th>
                 <th>Actitud</th>
-                <th>Vida máx.</th>
                 <th></th>
               </tr>
             </thead>
@@ -69,7 +68,6 @@ export function NpcsPanel({ campana, escribible }: Props) {
                   <td><div className="d-flex align-items-center gap-2"><Avatar url={npc.imagenUrl} nombre={npc.nombre} tamanio={32} /><Link to={`/personajes/${npc.id}`}>{npc.nombre}</Link></div></td>
                   <td>{npc.especie ?? '—'}</td>
                   <td><AgresionBadge estado={npc.estadoAgresion} /></td>
-                  <td>{npc.vidaMax ?? '—'}</td>
                   <td className="text-end">
                     {escribible && (
                       <div className="d-flex gap-2 justify-content-end">
