@@ -8,7 +8,6 @@ import { Admin } from './pages/Admin';
 import { CampanaDetalle } from './pages/CampanaDetalle';
 import { CampanaForm } from './pages/CampanaForm';
 import { Campanas } from './pages/Campanas';
-import { Catalogo } from './pages/Catalogo';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { MapEditor } from './pages/MapEditor';
@@ -60,8 +59,7 @@ function AppRoutes() {
           <Route path="/personajes/:id" element={<PersonajeDetalle />} />
           <Route path="/personajes/:id/editar" element={<PersonajeForm />} />
 
-          {/* Catálogo, rasgos y perfil */}
-          <Route path="/catalogo" element={<Catalogo />} />
+          {/* Rasgos y perfil */}
           <Route path="/rasgos" element={<Rasgos />} />
           <Route path="/perfil" element={<Perfil />} />
 
