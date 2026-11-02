@@ -3,8 +3,21 @@ import { CreatePersonajeDTO, UpdateJugableDTO, UpdateNoJugableDTO } from "./pers
 
 export const personajeRepository = { //repositorio de personajes que tiene los metodos de crear, actualizar, traer todos los personajes de un usuario, traer un personaje por id y eliminar un personaje por id y validar que el usuario sea el mismo que el del token y que el personaje sea jugable o no jugable y usar el schema correspondiente
   create(data: CreatePersonajeDTO, usuarioId: number) {
+    if (data.tipo === "no_jugable") {
+      return prisma.personaje.create({
+        data: {
+          ...data,
+          vidaActual: data.vidaMax ?? null,
+          usuarioId,
+        },
+      });
+    }
+
     return prisma.personaje.create({
-      data: { ...data, usuarioId },
+      data: {
+        ...data,
+        usuarioId,
+      },
     });
   },
 

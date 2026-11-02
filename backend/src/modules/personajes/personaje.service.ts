@@ -48,6 +48,17 @@ export const personajeService = {
 
     await assertCanModify(personaje, usuarioId);
 
+    if (personaje.tipo === "no_jugable") {
+      const campana = await prisma.campana.findUnique({
+        where: { id: personaje.campanaId! },
+        select: campanaAccesoSelect,
+      });
+
+      if (!campana) throw new NotFoundError("La campaña no existe");
+
+      assertCampanaEscribible(campana);
+    }
+
     return personajeRepository.update(id, data);
   },
 

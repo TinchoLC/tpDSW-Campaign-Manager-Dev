@@ -42,7 +42,12 @@ export const createPersonajeSchema = z.discriminatedUnion("tipo", [
 
 // Para el update no se permite cambiar "tipo", así que no se puede reusar el discriminatedUnion
 export const updateJugableSchema = createJugableSchema.omit({ tipo: true }).partial();
-export const updateNoJugableSchema = createNoJugableSchema.omit({ tipo: true }).partial();
+export const updateNoJugableSchema = createNoJugableSchema
+  .omit({ tipo: true })
+  .partial()
+  .extend({
+    vidaActual: z.number().int().nonnegative().nullable().optional(),
+  });
 
 export type CreatePersonajeDTO = z.infer<typeof createPersonajeSchema>;
 export type UpdateJugableDTO = z.infer<typeof updateJugableSchema>;
