@@ -3,21 +3,27 @@ import type { Ficha } from '../services/mapa.service';
 import type { Participante } from '../services/campana.service';
 import { personajeService, type Personaje } from '../services/personaje.service';
 import { colorDeFicha, esFichaDelUsuario, esNpc, estaCaida, imagenDeFicha, nombreDeFicha } from '../utils/ficha';
+import { DetalleParticipante } from './DetalleParticipante';
+import { DetalleNpc } from './DetalleNpc';
 
 interface PanelSesionProps {
   fichas: Ficha[];
   participantes: Participante[];
   npcs: Personaje[];
   usuarioId: number;
+  campanaId: number;
   esMaster: boolean;
   campanaFinalizada: boolean;
   fichaSeleccionadaId: number | null;
   onSeleccionarFicha: (id: number | null) => void;
   onColocarFicha: (datos: { personajeId?: number; personajeCampanaId?: number }) => void;
   onEliminarFicha?: (id: number) => void;
+  onParticipanteActualizado: () => void;
+  onNpcActualizado: () => void;
 }
 
 export function PanelSesion({
+  campanaId,
   fichas,
   participantes,
   npcs,
@@ -28,6 +34,8 @@ export function PanelSesion({
   onSeleccionarFicha,
   onColocarFicha,
   onEliminarFicha,
+  onParticipanteActualizado,
+  onNpcActualizado,
 }: PanelSesionProps) {
   const [tab, setTab] = useState<'detalle' | 'fichas' | 'chat' | 'notas'>('fichas');
 
@@ -38,26 +46,42 @@ export function PanelSesion({
     ? participantes.find((p) => p.id === fichaSeleccionada.personajeCampana?.id)
     : null;
 
-  const [personajeJugableDetalle, setPersonajeJugableDetalle] = useState<Personaje | null>(null);
+  const [personajeJugableDetalle, setPersonajeJugableDetalle] = useState<{
+    personajeId: number;
+    detalle: Personaje;
+  } | null>(null);
 
   useEffect(() => {
-    if (!participanteInfo?.personajeId) {
-      setPersonajeJugableDetalle(null);
-      return;
-    }
+    const personajeId = participanteInfo?.personajeId;
+
+    if (!personajeId) return;
+
     let cancelado = false;
+
     personajeService
-      .obtener(participanteInfo.personajeId)
+      .obtener(personajeId)
       .then((p) => {
-        if (!cancelado) setPersonajeJugableDetalle(p);
+        if (!cancelado) {
+          setPersonajeJugableDetalle({
+            personajeId,
+            detalle: p,
+          });
+        }
       })
       .catch(() => {
         if (!cancelado) setPersonajeJugableDetalle(null);
       });
+
     return () => {
       cancelado = true;
     };
   }, [participanteInfo?.personajeId]);
+
+const detalleActual =
+  personajeJugableDetalle &&
+  personajeJugableDetalle.personajeId === participanteInfo?.personajeId
+    ? personajeJugableDetalle.detalle
+    : null;
 
   const npcInfo = fichaSeleccionada?.personaje
     ? npcs.find((n) => n.id === fichaSeleccionada.personaje?.id)
@@ -158,113 +182,37 @@ export function PanelSesion({
                     <div className="list-group list-group-flush mb-3 small">
                       <div className="list-group-item px-0 py-1 d-flex justify-content-between">
                         <span className="text-body-secondary">Dueño (Cuenta):</span>
-                        <span className="fw-semibold">{participanteInfo.personaje.usuario.nombre}</span>
+                        <span className="fw-semibold">
+                          {participanteInfo.personaje.usuario.nombre}
+                        </span>
                       </div>
-                      {personajeJugableDetalle?.especie && (
+
+                      {detalleActual?.especie && (
                         <div className="list-group-item px-0 py-1 d-flex justify-content-between">
                           <span className="text-body-secondary">Especie:</span>
-                          <span className="fw-semibold">{personajeJugableDetalle.especie}</span>
+                          <span className="fw-semibold">
+                            {detalleActual.especie}
+                          </span>
                         </div>
                       )}
-                      {(participanteInfo.clase ?? personajeJugableDetalle?.clase) && (
-                        <div className="list-group-item px-0 py-1 d-flex justify-content-between">
-                          <span className="text-body-secondary">Clase:</span>
-                          <span className="fw-semibold">{participanteInfo.clase ?? personajeJugableDetalle?.clase}</span>
-                        </div>
-                      )}
-                      <div className="list-group-item px-0 py-1 d-flex justify-content-between">
-                        <span className="text-body-secondary">Nivel:</span>
-                        <span className="fw-semibold">{participanteInfo.nivel ?? personajeJugableDetalle?.nivel ?? 1}</span>
-                      </div>
                     </div>
 
-                    <h6 className="fw-bold small text-body-secondary mb-1">Combate y recursos</h6>
-                    <div className="row g-1 text-center small mb-3">
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Vida</small>
-                          <strong className="text-danger">
-                            {participanteInfo.vidaMax ?? personajeJugableDetalle?.vidaMax ?? '—'}
-                          </strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Armadura</small>
-                          <strong>{personajeJugableDetalle?.armadura ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Iniciativa</small>
-                          <strong>{personajeJugableDetalle?.iniciativa ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Velocidad</small>
-                          <strong>{personajeJugableDetalle?.velocidad ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Maná máx.</small>
-                          <strong>{personajeJugableDetalle?.manaMax ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Oro / Exp.</small>
-                          <strong>
-                            {personajeJugableDetalle?.oro ?? 0} / {personajeJugableDetalle?.experiencia ?? 0}
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
+                    <DetalleParticipante
+                      campanaId={campanaId}
+                      participante={participanteInfo}
+                      editable={
+                        !campanaFinalizada &&
+                        (
+                          esMaster ||
+                          participanteInfo.personaje.usuario.id === usuarioId
+                        )
+                      }
+                      onActualizado={onParticipanteActualizado}
+                    />
 
-                    <h6 className="fw-bold small text-body-secondary mb-1">Atributos</h6>
-                    <div className="row g-1 text-center small mb-3">
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Fuerza</small>
-                          <strong>{personajeJugableDetalle?.fuerza ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Destreza</small>
-                          <strong>{personajeJugableDetalle?.destreza ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Constitución</small>
-                          <strong>{personajeJugableDetalle?.constitucion ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Inteligencia</small>
-                          <strong>{personajeJugableDetalle?.inteligencia ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Sabiduría</small>
-                          <strong>{personajeJugableDetalle?.sabiduria ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Carisma</small>
-                          <strong>{personajeJugableDetalle?.carisma ?? '—'}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    {personajeJugableDetalle?.descripcion && (
-                      <p className="small text-body-secondary border-top pt-2 mb-2">
-                        {personajeJugableDetalle.descripcion}
+                    {detalleActual?.descripcion && (
+                      <p className="small text-body-secondary border-top pt-2 mt-3 mb-2">
+                        {detalleActual.descripcion}
                       </p>
                     )}
                   </div>
@@ -272,89 +220,11 @@ export function PanelSesion({
 
                 {/* 2. SI ES NPC */}
                 {npcInfo && (
-                  <div>
-                    <h6 className="fw-bold small text-body-secondary mb-1">Combate</h6>
-                    <div className="row g-1 text-center small mb-3">
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Vida</small>
-                          <strong className="text-danger">
-                            {npcInfo.vidaMax} / {npcInfo.vidaMax}
-                          </strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Armadura</small>
-                          <strong>{npcInfo.armadura ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Iniciativa</small>
-                          <strong>{npcInfo.iniciativa ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-6 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Velocidad</small>
-                          <strong>{npcInfo.velocidad ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-6 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Comportamiento</small>
-                          <strong className="text-capitalize">{npcInfo.estadoAgresion ?? '—'}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    <h6 className="fw-bold small text-body-secondary mb-1">Atributos</h6>
-                    <div className="row g-1 text-center small mb-3">
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Fuerza</small>
-                          <strong>{npcInfo.fuerza ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Destreza</small>
-                          <strong>{npcInfo.destreza ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Constitución</small>
-                          <strong>{npcInfo.constitucion ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Inteligencia</small>
-                          <strong>{npcInfo.inteligencia ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Sabiduría</small>
-                          <strong>{npcInfo.sabiduria ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Carisma</small>
-                          <strong>{npcInfo.carisma ?? '—'}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    {npcInfo.descripcion && (
-                      <p className="small text-body-secondary border-top pt-2 mb-2">
-                        {npcInfo.descripcion}
-                      </p>
-                    )}
-                  </div>
+                  <DetalleNpc
+                    npc={npcInfo}
+                    editable={esMaster && !campanaFinalizada}
+                    onActualizado={onNpcActualizado}
+                  />
                 )}
 
                 <div className="bg-body-tertiary p-2 rounded small mb-3">

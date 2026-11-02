@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { Prisma } from "../../generated/prisma/client";
 import { darDeBajaPersonajes } from "../../lib/baja-logica";
 import { campanaAccesoSelect, assertCampanaEscribible } from "../../lib/campana-acceso";
-import { ForbiddenError, NotFoundError } from "../../lib/errors";
+import { ForbiddenError, NotFoundError, BadRequestError } from "../../lib/errors";
 
 
 async function assertCanModify(
@@ -24,6 +24,43 @@ async function assertCanModify(
   }
 }
 
+async function validarRasgosPersonaje(
+  rasgoIds: number[] | undefined,
+  tipo: "jugable" | "no_jugable",
+  campanaId: number | null,
+  nivel: number
+) {
+  if (rasgoIds === undefined || rasgoIds.length === 0) return;
+
+  const rasgos = await prisma.rasgo.findMany({
+    where: {
+      id: { in: rasgoIds },
+      activo: true,
+      AND: [
+        {
+          OR:
+            tipo === "jugable"
+              ? [{ campanaId: null }]
+              : [{ campanaId: null }, { campanaId }],
+        },
+        {
+          OR: [
+            { nivelMinimo: null },
+            { nivelMinimo: { lte: nivel } },
+          ],
+        },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (rasgos.length !== rasgoIds.length) {
+    throw new BadRequestError(
+      "Uno o más rasgos no existen, no están disponibles para este personaje o requieren un nivel superior"
+    );
+  }
+}
+
 export const personajeService = {
   async create(data: CreatePersonajeDTO, usuarioId: number) {
     // Un NPC solo lo puede crear el master de la campaña, y en una campaña vigente
@@ -38,7 +75,12 @@ export const personajeService = {
       }
       assertCampanaEscribible(campana);
     }
-
+    await validarRasgosPersonaje(
+      data.rasgoIds,
+      data.tipo,
+      data.tipo === "no_jugable" ? data.campanaId : null,
+      data.tipo === "jugable" ? data.nivel : 1
+    );    
     return personajeRepository.create(data, usuarioId);
   },
 
@@ -48,6 +90,24 @@ export const personajeService = {
 
     await assertCanModify(personaje, usuarioId);
 
+    if (personaje.tipo === "no_jugable") {
+      const campana = await prisma.campana.findUnique({
+        where: { id: personaje.campanaId! },
+        select: campanaAccesoSelect,
+      });
+
+      if (!campana) throw new NotFoundError("La campaña no existe");
+
+      assertCampanaEscribible(campana);
+    }
+    await validarRasgosPersonaje(
+      data.rasgoIds,
+      personaje.tipo as "jugable" | "no_jugable",
+      personaje.campanaId,
+      personaje.tipo === "jugable"
+        ? (("nivel" in data ? data.nivel : undefined) ?? personaje.nivel ?? 1)
+        : 1
+    );    
     return personajeRepository.update(id, data);
   },
 
