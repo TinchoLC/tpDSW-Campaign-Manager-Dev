@@ -16,6 +16,9 @@ import { ApiError } from '../services/api';
 import { campanaService, type Campana, type EstadoCampana, type Participante } from '../services/campana.service';
 import { personajeService, type PersonajeJugable } from '../services/personaje.service';
 import { mensajeError } from '../utils/form';
+import { MapasPanel } from '../components/MapasPanel';
+import { useConfirmar } from '../hooks/useConfirmar';
+
 
 // Mismas transiciones que valida el backend: planificada → activa ⇄ pausada, activa → finalizada
 const TRANSICIONES: Record<EstadoCampana, { estado: EstadoCampana; texto: string; clase: string }[]> = {
@@ -58,6 +61,7 @@ export function CampanaDetalle() {
   const { usuario } = useAuth();
   const usuarioId = usuario?.id ?? 0;
   const navigate = useNavigate();
+  const { confirmar, dialogo } = useConfirmar();
 
   const { data, error, loading, recargar } = useApi(`detalle-${campanaId}-${usuarioId}`, () =>
     cargarDetalle(campanaId, usuarioId)
@@ -104,8 +108,15 @@ export function CampanaDetalle() {
   }
 
   const cambiarEstado = async (estado: EstadoCampana) => {
-    if (estado === 'finalizada' &&
-      !window.confirm('Una campaña finalizada no admite más cambios. ¿Finalizarla?')) return;
+    if (
+      estado === 'finalizada' &&
+      !(await confirmar({
+        titulo: 'Finalizar campaña',
+        mensaje: 'Una campaña finalizada no admite más cambios. ¿Finalizarla?',
+        textoConfirmar: 'Finalizar',
+      }))
+    )
+      return;
 
     setErrorAccion(null);
     try {
@@ -117,7 +128,14 @@ export function CampanaDetalle() {
   };
 
   const eliminar = async () => {
-    if (!window.confirm(`¿Eliminar la campaña "${campana.nombre}"? Se dan de baja sus NPCs, mapas y contenido.`)) return;
+    if (
+      !(await confirmar({
+        titulo: 'Eliminar campaña',
+        mensaje: `¿Eliminar la campaña "${campana.nombre}"? Se dan de baja sus NPCs, mapas y contenido.`,
+        textoConfirmar: 'Eliminar',
+      }))
+    )
+      return;
 
     setErrorAccion(null);
     try {
@@ -129,7 +147,14 @@ export function CampanaDetalle() {
   };
 
   const desvincular = async (p: Participante) => {
-    if (!window.confirm(`¿Desvincular a ${p.nombre} de la campaña? Se quitarán sus fichas de los mapas.`)) return;
+    if (
+      !(await confirmar({
+        titulo: 'Desvincular personaje',
+        mensaje: `¿Sacar a ${p.nombre} de la campaña? Perderá su posición en los mapas.`,
+        textoConfirmar: 'Desvincular',
+      }))
+    )
+      return;
 
     setErrorAccion(null);
     try {
@@ -256,6 +281,11 @@ export function CampanaDetalle() {
           <RasgosPanel titulo="Rasgos" campanaId={campana.id} esMaster={esMaster && escribible} />
         </div>
       )}
+      {puedeEntrar && (
+        <div className="mt-4">
+          <MapasPanel campanaId={campana.id} esMaster={esMaster} escribible={escribible} />
+        </div>
+      )}
 
       {modalAbierto && (
         <ModalUnirse
@@ -269,6 +299,7 @@ export function CampanaDetalle() {
           }}
         />
       )}
+      {dialogo}
     </main>
   );
 }

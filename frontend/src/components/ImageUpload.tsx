@@ -119,10 +119,6 @@ export function ImageUpload({
         )}
       </div>
 
-      <small className="form-text text-body-secondary d-block mt-1">
-        PNG, JPG, WEBP o GIF (hasta 5 MB).
-      </small>
-
       {error && <div className="text-danger small mt-1">{error}</div>}
     </div>
   );

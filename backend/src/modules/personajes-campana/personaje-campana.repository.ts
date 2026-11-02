@@ -1,31 +1,95 @@
 import { prisma } from "../../lib/prisma";
+import { UpdatePersonajeCampanaDTO } from "./personaje-campana.dto";
 
-// Lo que ve cualquier participante de la campaña (no incluye estadísticas ni inventario)
-const participanteSelect = {
-  id: true,
-  nombre: true,
-  clase: true,
-  nivel: true,
-  estado: true,
-  vidaActual: true,
-  vidaMax: true,
-  personajeId: true,
-  personaje: {
-    select: { imagenUrl: true, usuario: { select: { id: true, nombre: true } } },
-  },
-} as const;
+// Lo que ve cualquier participante de la campaña
+// (no incluye estadísticas ni inventario).
 
-// Personaje jugable activo con el kit que se copia a la instancia. Se descartan los
-// objetos, acciones y rasgos dados de baja o específicos de OTRA campaña.
-function buscarPersonajeParaVincular(personajeId: number, campanaId: number) {
-  const delKit = { activo: true, OR: [{ campanaId: null }, { campanaId }] };
+function participanteSelect(campanaId: number, esMaster: boolean) {
+  return {
+    id: true,
+    nombre: true,
+    armadura: true,
+    iniciativa: true,
+    velocidad: true,
+    vidaMax: true,
+    vidaActual: true,
+    nivel: true,
+    oro: true,
+    experiencia: true,
+    clase: true,
+    manaMax: true,
+    manaActual: true,
+    fuerza: true,
+    destreza: true,
+    constitucion: true,
+    inteligencia: true,
+    carisma: true,
+    sabiduria: true,
+    estado: true,
+    personajeId: true,
+    campanaId: true,
+
+    rasgos: {
+      where: {
+        activo: true,
+        OR: [
+          { campanaId: null },
+          { campanaId },
+        ],
+        ...(esMaster ? {} : { visibleAJugador: true }),
+      },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        nivelMinimo: true,
+        campanaId: true,
+        visibleAJugador: true,
+      },
+    },
+
+    personaje: {
+      select: {
+        imagenUrl: true,
+        usuario: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+    },
+  };
+}
+
+
+// Personaje jugable activo con el kit que se copia a la instancia.
+// Se descartan los objetos, acciones y rasgos dados de baja
+// o específicos de OTRA campaña.
+function buscarPersonajeParaVincular(
+  personajeId: number,
+  campanaId: number
+) {
+  const delKit = {
+    activo: true,
+    OR: [{ campanaId: null }, { campanaId }],
+  };
 
   return prisma.personaje.findFirst({
     where: { id: personajeId, activo: true },
     include: {
-      objetos: { where: { objeto: delKit }, select: { objetoId: true, cantidad: true } },
-      acciones: { where: delKit, select: { id: true } },
-      rasgos: { where: delKit, select: { id: true } },
+      objetos: {
+        where: { objeto: delKit },
+        select: { objetoId: true, cantidad: true },
+      },
+      acciones: {
+        where: delKit,
+        select: { id: true },
+      },
+      rasgos: {
+        where: { activo: true, campanaId: null },
+        select: { id: true },
+      },
     },
   });
 }
@@ -37,16 +101,18 @@ export type PersonajeParaVincular = NonNullable<
 export const personajeCampanaRepository = {
   findPersonajeParaVincular: buscarPersonajeParaVincular,
 
-  // Incluye las instancias dadas de baja: @@unique([personajeId, campanaId]) las cuenta igual
+  // Incluye las instancias dadas de baja:
+  // @@unique([personajeId, campanaId]) las cuenta igual.
   findByPersonajeYCampana(personajeId: number, campanaId: number) {
     return prisma.personajeCampana.findUnique({
-      where: { personajeId_campanaId: { personajeId, campanaId } },
+      where: {
+        personajeId_campanaId: { personajeId, campanaId },
+      },
     });
   },
 
-  // Crea la instancia copiando la plantilla. vidaMax y vidaActual salen del personaje
-  // (el service ya verificó que vidaMax existe). Es una sola escritura anidada, así que
-  // Prisma la ejecuta de forma atómica.
+  // Crea la instancia copiando la plantilla.
+  // vidaMax y vidaActual salen del personaje.
   createDesdePersonaje(p: PersonajeParaVincular, campanaId: number) {
     return prisma.personajeCampana.create({
       data: {
@@ -70,29 +136,78 @@ export const personajeCampanaRepository = {
         sabiduria: p.sabiduria,
         carisma: p.carisma,
         inteligencia: p.inteligencia,
-        objetos: { create: p.objetos.map((o) => ({ objetoId: o.objetoId, cantidad: o.cantidad })) },
-        acciones: { connect: p.acciones.map((a) => ({ id: a.id })) },
-        rasgos: { connect: p.rasgos.map((r) => ({ id: r.id })) },
+        objetos: {
+          create: p.objetos.map((o) => ({
+            objetoId: o.objetoId,
+            cantidad: o.cantidad,
+          })),
+        },
+        acciones: {
+          connect: p.acciones.map((a) => ({ id: a.id })),
+        },
+        rasgos: {
+          connect: p.rasgos.map((r) => ({ id: r.id })),
+        },
       },
     });
   },
 
   reactivar(id: number) {
-    return prisma.personajeCampana.update({ where: { id }, data: { activo: true } });
-  },
-
-  // Instancia activa de ESA campaña (el id solo no alcanza: evita mezclar campañas)
-  findActivaEnCampana(id: number, campanaId: number) {
-    return prisma.personajeCampana.findFirst({
-      where: { id, campanaId, activo: true },
-      select: { id: true, personaje: { select: { usuarioId: true } } },
+    return prisma.personajeCampana.update({
+      where: { id },
+      data: { activo: true },
     });
   },
 
-  findActivasByCampana(campanaId: number) {
+  // Instancia activa de ESA campaña.
+  // Incluye los datos necesarios para autorización y validaciones.
+  findActivaEnCampana(id: number, campanaId: number) {
+    return prisma.personajeCampana.findFirst({
+      where: { id, campanaId, activo: true },
+      select: {
+        id: true,
+        vidaActual: true,
+        vidaMax: true,
+        manaActual: true,
+        manaMax: true,
+        estado: true,
+        personaje: {
+          select: { usuarioId: true },
+        },
+      },
+    });
+  },
+
+  findActivaConNivel(id: number, campanaId: number) {
+  return prisma.personajeCampana.findFirst({
+    where: { id, campanaId, activo: true },
+    select: { id: true, nivel: true },
+  });
+},
+
+actualizarRasgos(id: number, rasgoIds: number[]) {
+  return prisma.personajeCampana.update({
+    where: { id },
+    data: {
+      rasgos: {
+        set: rasgoIds.map((rasgoId) => ({ id: rasgoId })),
+      },
+    },
+  });
+},
+
+  // Actualiza exclusivamente los campos editables de la instancia.
+  update(id: number, data: UpdatePersonajeCampanaDTO) {
+    return prisma.personajeCampana.update({
+      where: { id },
+      data,
+    });
+  },
+
+  findActivasByCampana(campanaId: number, esMaster: boolean) {
     return prisma.personajeCampana.findMany({
       where: { campanaId, activo: true },
-      select: participanteSelect,
+      select: participanteSelect(campanaId, esMaster),
       orderBy: { id: "asc" },
     });
   },

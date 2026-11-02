@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { resolveAssetUrl } from '../services/api';
 import { campanaService, type Campana } from '../services/campana.service';
-import { mapaService } from '../services/mapa.service';
+import { mapaService, type Mapa } from '../services/mapa.service';
 
 const DIMENSION_MIN = 1;
 const DIMENSION_MAX = 100;
@@ -21,16 +21,17 @@ function aDimension(texto: string): number | null {
   return numero;
 }
 
-function FormularioMapa({ campana }: { campana: Campana }) {
+function FormularioMapa({ campana, inicial }: { campana: Campana; inicial?: Mapa }) {
   const navigate = useNavigate();
-  const volverA = `/campanas/${campana.id}/sesion`;
+  const esEdicion = Boolean(inicial);
+  const volverA = esEdicion ? `/campanas/${campana.id}` : `/campanas/${campana.id}/sesion`;
 
-  const [nombre, setNombre] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [columnas, setColumnas] = useState('10');
-  const [filas, setFilas] = useState('10');
+  const [nombre, setNombre] = useState(inicial?.nombre ?? '');
+  const [descripcion, setDescripcion] = useState(inicial?.descripcion ?? '');
+  const [columnas, setColumnas] = useState(String(inicial?.columnas ?? 10));
+  const [filas, setFilas] = useState(String(inicial?.filas ?? 10));
   // URL relativa de la imagen ya subida (ImageUpload la sube apenas se elige el archivo)
-  const [imagenUrl, setImagenUrl] = useState<string | null>(null);
+  const [imagenUrl, setImagenUrl] = useState<string | null>(inicial?.imagenUrl ?? null);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -50,18 +51,24 @@ function FormularioMapa({ campana }: { campana: Campana }) {
 
     setEnviando(true);
     try {
-      await mapaService.crear(campana.id, {
+      const datos = {
         nombre: nombreLimpio,
         descripcion: descripcion.trim() || undefined,
         imagenUrl,
         columnas: cols,
         filas: fils,
-      });
+      };
+
+      if (inicial) {
+        await mapaService.actualizar(inicial.id, datos);
+      } else {
+        await mapaService.crear(campana.id, datos);
+      }
 
       navigate(volverA);
     } catch (err) {
       // Se conserva el formulario tal cual para poder corregir o reintentar
-      setError(err instanceof Error ? err.message : 'No se pudo crear el mapa.');
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el mapa.');
       setEnviando(false);
     }
   };
@@ -69,10 +76,10 @@ function FormularioMapa({ campana }: { campana: Campana }) {
   return (
     <main className="container py-4" style={{ maxWidth: '900px' }}>
       <Link to={volverA} className="d-inline-block mb-3">
-        ← Volver a la sesión
+        {esEdicion ? '← Volver a la campaña' : '← Volver a la sesión'}
       </Link>
 
-      <h2 className="mb-1">Nuevo mapa</h2>
+      <h2 className="mb-1">{esEdicion ? 'Editar mapa' : 'Nuevo mapa'}</h2>
       <p className="text-body-secondary">Campaña: {campana.nombre}</p>
 
       {error && (
@@ -113,7 +120,12 @@ function FormularioMapa({ campana }: { campana: Campana }) {
               <div className="form-text">{descripcion.length}/500</div>
             </div>
 
-            <ImageUpload tipo="mapas" etiqueta="Imagen del mapa" onChange={setImagenUrl} />
+            <ImageUpload
+              tipo="mapas"
+              etiqueta="Imagen del mapa"
+              valorInicial={inicial?.imagenUrl}
+              onChange={setImagenUrl}
+            />
 
             <div className="row g-3 mb-3">
               <div className="col-6">
@@ -179,22 +191,26 @@ function FormularioMapa({ campana }: { campana: Campana }) {
   );
 }
 
-// Solo el master de la campaña puede crear mapas, y no si la campaña está finalizada
+// Solo el master de la campaña puede crear o editar mapas, y no si la campaña está finalizada
 export function MapEditor() {
-  const { id } = useParams();
+  const { id, mapaId } = useParams();
   const campanaId = Number(id);
   const { usuario } = useAuth();
 
   const { data: campana, error, loading } = useApi(`campana-${campanaId}`, () =>
     campanaService.obtener(campanaId)
   );
+  const { data: mapaExistente, error: errorMapa, loading: cargandoMapa } = useApi(
+    mapaId ? `mapa-editar-${mapaId}` : 'mapa-nuevo',
+    () => (mapaId ? mapaService.conFichas(Number(mapaId)) : Promise.resolve(null))
+  );
 
-  if (loading) return <Cargando pagina />;
+  if (loading || cargandoMapa) return <Cargando pagina />;
 
-  if (error || !campana) {
+  if (error || !campana || errorMapa) {
     return (
       <ErrorPagina
-        mensaje={error?.message ?? 'No se pudo cargar la campaña'}
+        mensaje={error?.message ?? errorMapa?.message ?? 'No se pudo cargar la campaña'}
         volverA="/campanas"
         textoVolver="← Volver a las campañas"
       />
@@ -204,7 +220,7 @@ export function MapEditor() {
   if (campana.master.id !== usuario?.id) {
     return (
       <ErrorPagina
-        mensaje="Acceso denegado: solo el master de la campaña puede crear mapas."
+        mensaje="Acceso denegado: solo el master de la campaña puede gestionar mapas."
         volverA={`/campanas/${campana.id}`}
         textoVolver="← Volver a la campaña"
       />
@@ -214,12 +230,12 @@ export function MapEditor() {
   if (campana.estado === 'finalizada') {
     return (
       <ErrorPagina
-        mensaje="La campaña está finalizada: ya no se pueden crear mapas."
+        mensaje="La campaña está finalizada: ya no se pueden modificar mapas."
         volverA={`/campanas/${campana.id}`}
         textoVolver="← Volver a la campaña"
       />
     );
   }
 
-  return <FormularioMapa campana={campana} />;
+  return <FormularioMapa campana={campana} inicial={mapaExistente ?? undefined} />;
 }

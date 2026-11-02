@@ -18,6 +18,6 @@ export function EstadoParticipanteBadge({ estado }: { estado: EstadoPersonajeCam
 }
 
 export function AgresionBadge({ estado }: { estado: string | null }) {
-  if (!estado) return null;
-  return <span className={`badge ${COLOR_AGRESION[estado] ?? 'bg-secondary'}`}>{estado}</span>;
+  const valor = estado ?? 'neutral';
+  return <span className={`badge ${COLOR_AGRESION[valor] ?? 'bg-secondary'}`}>{valor}</span>;
 }

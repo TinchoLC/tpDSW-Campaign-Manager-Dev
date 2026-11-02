@@ -15,12 +15,21 @@ export interface Personaje {
   iniciativa: number | null;
   velocidad: number | null;
   vidaMax: number | null;
+  vidaActual: number | null;
   fuerza: number | null;
   destreza: number | null;
   constitucion: number | null;
   inteligencia: number | null;
   carisma: number | null;
   sabiduria: number | null;
+  rasgos: {
+    id: number;
+    nombre: string;
+    descripcion: string | null;
+    nivelMinimo: number | null;
+    campanaId: number | null;
+    visibleAJugador: boolean;
+  }[];
   // solo jugables
   clase: string | null;
   nivel: number | null;
@@ -51,12 +60,14 @@ export interface PersonajeInput {
   iniciativa?: number;
   velocidad?: number;
   vidaMax?: number;
+  vidaActual?: number | null;
   fuerza?: number;
   destreza?: number;
   constitucion?: number;
   inteligencia?: number;
   carisma?: number;
   sabiduria?: number;
+  rasgoIds?: number[];
   clase?: string;
   nivel?: number;
   manaMax?: number;

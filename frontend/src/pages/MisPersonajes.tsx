@@ -6,14 +6,18 @@ import { ErrorAlert } from '../components/ErrorAlert';
 import { useApi } from '../hooks/useApi';
 import { personajeService, type Personaje } from '../services/personaje.service';
 import { mensajeError } from '../utils/form';
+import { useConfirmar } from '../hooks/useConfirmar';
 
 export function MisPersonajes() {
   const { data: datos, error, loading: cargando, recargar } = useApi('personajes-mios', personajeService.mios);
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
-
+  const { confirmar, dialogo } = useConfirmar();
   const eliminar = async (p: Personaje) => {
-    if (!window.confirm(`¿Eliminar a ${p.nombre}? También deja de participar en sus campañas.`)) return;
-
+    if (!(await confirmar({
+      titulo: 'Eliminar personaje',
+      mensaje: `¿Eliminar a ${p.nombre}? También deja de participar en sus campañas.`,
+      textoConfirmar: 'Eliminar'
+    }))) return;
     setErrorAccion(null);
     try {
       await personajeService.eliminar(p.id);
@@ -67,6 +71,7 @@ export function MisPersonajes() {
           ))}
         </div>
       )}
+      {dialogo}
     </main>
   );
 }

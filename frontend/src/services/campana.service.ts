@@ -39,20 +39,51 @@ export interface CampanaUpdate extends Partial<CampanaInput> {
 export type EstadoPersonajeCampana = 'vivo' | 'muerto' | 'inconsciente';
 
 // Lo que ve cualquier participante de una campaña
+
 export interface Participante {
   id: number;
   nombre: string;
-  clase: string | null;
-  nivel: number;
-  estado: EstadoPersonajeCampana;
-  vidaActual: number;
+  armadura: string | null;
+  iniciativa: number | null;
+  velocidad: number | null;
   vidaMax: number;
+  vidaActual: number;
+  nivel: number;
+  oro: number | null;
+  experiencia: number | null;
+  clase: string | null;
+  manaMax: number | null;
+  manaActual: number | null;
+  fuerza: number | null;
+  destreza: number | null;
+  constitucion: number | null;
+  inteligencia: number | null;
+  carisma: number | null;
+  sabiduria: number | null;
+  estado: EstadoPersonajeCampana;
   personajeId: number;
   personaje: {
     imagenUrl: string | null;
-    usuario: { id: number; nombre: string };
+    usuario: {
+      id: number;
+      nombre: string;
+    };
   };
+  rasgos: {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  nivelMinimo: number | null;
+  campanaId: number | null;
+  visibleAJugador: boolean;
+  }[];
 }
+
+export type ParticipanteUpdate = Partial<
+  Omit<Participante, 'id' | 'personajeId' | 'personaje'>
+>;
+
+
 
 export const campanaService = {
   listar(estado?: EstadoCampana): Promise<Campana[]> {
@@ -94,6 +125,35 @@ export const campanaService = {
       body: JSON.stringify({ personajeId }),
     });
   },
+  
+  actualizarParticipante(
+    campanaId: number,
+    participanteId: number,
+    datos: ParticipanteUpdate
+  ): Promise<Participante> {
+    return apiFetch<Participante>(
+      `/campanas/${campanaId}/participantes/${participanteId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(datos),
+      }
+    );
+  },
+
+  actualizarRasgosParticipante(
+    campanaId: number,
+    participanteId: number,
+    rasgoIds: number[]
+  ): Promise<Participante> {
+    return apiFetch<Participante>(
+      `/campanas/${campanaId}/participantes/${participanteId}/rasgos`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ rasgoIds }),
+      }
+    );
+  },  
+
 
   // Quita un personaje de la campaña (baja lógica; se pierden sus fichas de los mapas)
   desvincular(campanaId: number, participanteId: number): Promise<void> {

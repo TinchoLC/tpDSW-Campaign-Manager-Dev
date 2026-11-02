@@ -9,6 +9,7 @@ import { ErrorAlert } from './ErrorAlert';
 import { AgresionBadge } from './Badges';
 import { Avatar } from './Avatar';
 import { FiltroAgresion, type FiltroAgresionValor } from './FiltroAgresion';
+import { useConfirmar } from '../hooks/useConfirmar';
 
 interface Props {
   campana: Campana;
@@ -24,9 +25,10 @@ export function NpcsPanel({ campana, escribible }: Props) {
     () => campanaService.npcs(campana.id, filtro === 'todos' ? undefined : filtro)
   );
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
+  const { confirmar, dialogo } = useConfirmar();
 
   const eliminar = async (npc: Personaje) => {
-    if (!window.confirm(`¿Eliminar al NPC ${npc.nombre}?`)) return;
+    if (!(await confirmar({ titulo: 'Eliminar NPC', mensaje: `¿Eliminar al NPC ${npc.nombre}?`, textoConfirmar: 'Eliminar' }))) return;
     setErrorAccion(null);
     try {
       await personajeService.eliminar(npc.id);
@@ -55,11 +57,7 @@ export function NpcsPanel({ campana, escribible }: Props) {
       {errorAccion && <ErrorAlert mensaje={errorAccion} />}
 
       {datos && datos.length === 0 && (
-        <p className="text-body-secondary">
-          {filtro === 'todos'
-            ? 'Todavía no creaste NPCs en esta campaña.'
-            : `No hay NPCs con actitud "${filtro}".`}
-        </p>
+        <p className="text-body-secondary">No hay NPCs para mostrar.</p>
       )}
 
       {datos && datos.length > 0 && (
@@ -109,6 +107,7 @@ export function NpcsPanel({ campana, escribible }: Props) {
           </table>
         </div>
       )}
+      {dialogo}
     </section>
   );
 }
