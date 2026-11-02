@@ -1,10 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { LayoutPrivado } from './components/LayoutPrivado';
-import { AdminRoute, ProtectedRoute } from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
-import { Admin } from './pages/Admin';
 import { CampanaDetalle } from './pages/CampanaDetalle';
 import { CampanaForm } from './pages/CampanaForm';
 import { Campanas } from './pages/Campanas';
@@ -60,17 +59,13 @@ function AppRoutes() {
           <Route path="/personajes/:id" element={<PersonajeDetalle />} />
           <Route path="/personajes/:id/editar" element={<PersonajeForm />} />
 
-          {/* Rasgos y perfil */}
           <Route path="/rasgos" element={<Rasgos />} />
+
           <Route path="/perfil" element={<Perfil />} />
 
-          {/* ── Solo administradores (AdminRoute) ── */}
-          <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<Admin />} />
-          </Route>
         </Route>
       </Route>
-      
+
       {/* Cualquier otra ruta */}
       <Route path="*" element={<NotFound />} />
     </Routes>
