@@ -50,3 +50,4 @@ desktop.ini
 # Uploads
 backend/public/uploads/*
 !backend/public/uploads/.gitkeep
+!backend/public/uploads/test-images/

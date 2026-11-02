@@ -28,6 +28,11 @@ npm run prisma:generate -w backend
 npm run prisma:migrate -w backend
 ```
 
+Poblar con datos de prueba (usuarios, campañas y mapas):
+```bash
+npm run seed
+```
+
 Ejecutar backend y frontend en simultáneo con concurrently:
 ```bash
 npm run dev

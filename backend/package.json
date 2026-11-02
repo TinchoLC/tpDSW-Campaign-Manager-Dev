@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/server.js\"",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "prisma db seed"
   },
   "keywords": [],
   "author": "",
@@ -36,6 +37,10 @@
     "@types/swagger-ui-express": "^4.1.8",
     "prisma": "^6.19.3",
     "tsc-watch": "7.2.1",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
