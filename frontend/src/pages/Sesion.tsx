@@ -286,6 +286,19 @@ export function Sesion() {
 
   const estaEnJuego = mapas.find((m) => m.id === mapa?.id)?.estado === 'en_juego';
 
+  const handleNpcActualizado = async () => {
+  try {
+    const npcsActualizados = await campanaService.npcs(campanaId);
+    setNpcsActuales(npcsActualizados);
+  } catch (err) {
+    setErrorAccion(
+      err instanceof Error
+        ? err.message
+        : 'No se pudieron actualizar los NPCs'
+    );
+  }
+};
+
   return (
     <main className="container-fluid py-3 px-md-4">
       {/* Barra superior con volver y alertas */}
@@ -366,6 +379,7 @@ export function Sesion() {
               onColocarFicha={handleColocarFicha}
               onEliminarFicha={handleEliminarFicha}
               onParticipanteActualizado={recargar}
+              onNpcActualizado={handleNpcActualizado}
             />
           </div>
 

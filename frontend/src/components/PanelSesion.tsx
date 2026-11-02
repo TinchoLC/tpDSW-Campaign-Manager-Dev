@@ -4,6 +4,7 @@ import type { Participante } from '../services/campana.service';
 import { personajeService, type Personaje } from '../services/personaje.service';
 import { colorDeFicha, esFichaDelUsuario, esNpc, estaCaida, imagenDeFicha, nombreDeFicha } from '../utils/ficha';
 import { DetalleParticipante } from './DetalleParticipante';
+import { DetalleNpc } from './DetalleNpc';
 
 interface PanelSesionProps {
   fichas: Ficha[];
@@ -18,6 +19,7 @@ interface PanelSesionProps {
   onColocarFicha: (datos: { personajeId?: number; personajeCampanaId?: number }) => void;
   onEliminarFicha?: (id: number) => void;
   onParticipanteActualizado: () => void;
+  onNpcActualizado: () => void;
 }
 
 export function PanelSesion({
@@ -33,6 +35,7 @@ export function PanelSesion({
   onColocarFicha,
   onEliminarFicha,
   onParticipanteActualizado,
+  onNpcActualizado,
 }: PanelSesionProps) {
   const [tab, setTab] = useState<'detalle' | 'fichas' | 'chat' | 'notas'>('fichas');
 
@@ -217,89 +220,11 @@ const detalleActual =
 
                 {/* 2. SI ES NPC */}
                 {npcInfo && (
-                  <div>
-                    <h6 className="fw-bold small text-body-secondary mb-1">Combate</h6>
-                    <div className="row g-1 text-center small mb-3">
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Vida</small>
-                          <strong className="text-danger">
-                            {npcInfo.vidaMax} / {npcInfo.vidaMax}
-                          </strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Armadura</small>
-                          <strong>{npcInfo.armadura ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Iniciativa</small>
-                          <strong>{npcInfo.iniciativa ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-6 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Velocidad</small>
-                          <strong>{npcInfo.velocidad ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-6 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Comportamiento</small>
-                          <strong className="text-capitalize">{npcInfo.estadoAgresion ?? '—'}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    <h6 className="fw-bold small text-body-secondary mb-1">Atributos</h6>
-                    <div className="row g-1 text-center small mb-3">
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Fuerza</small>
-                          <strong>{npcInfo.fuerza ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Destreza</small>
-                          <strong>{npcInfo.destreza ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Constitución</small>
-                          <strong>{npcInfo.constitucion ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Inteligencia</small>
-                          <strong>{npcInfo.inteligencia ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Sabiduría</small>
-                          <strong>{npcInfo.sabiduria ?? '—'}</strong>
-                        </div>
-                      </div>
-                      <div className="col-4 mt-1">
-                        <div className="bg-body-tertiary p-1 rounded border">
-                          <small className="text-body-secondary d-block">Carisma</small>
-                          <strong>{npcInfo.carisma ?? '—'}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    {npcInfo.descripcion && (
-                      <p className="small text-body-secondary border-top pt-2 mb-2">
-                        {npcInfo.descripcion}
-                      </p>
-                    )}
-                  </div>
+                  <DetalleNpc
+                    npc={npcInfo}
+                    editable={esMaster && !campanaFinalizada}
+                    onActualizado={onNpcActualizado}
+                  />
                 )}
 
                 <div className="bg-body-tertiary p-2 rounded small mb-3">

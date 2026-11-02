@@ -15,6 +15,7 @@ export interface Personaje {
   iniciativa: number | null;
   velocidad: number | null;
   vidaMax: number | null;
+  vidaActual: number | null;
   fuerza: number | null;
   destreza: number | null;
   constitucion: number | null;
@@ -51,6 +52,7 @@ export interface PersonajeInput {
   iniciativa?: number;
   velocidad?: number;
   vidaMax?: number;
+  vidaActual?: number | null;
   fuerza?: number;
   destreza?: number;
   constitucion?: number;
