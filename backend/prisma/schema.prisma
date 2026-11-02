@@ -86,7 +86,6 @@ model FichaMapa {
   posicionX Int
   posicionY Int
   estado    String?
-  imagenUrl String?
 
   mapa   Mapa @relation(fields: [mapaId], references: [id])
   mapaId Int

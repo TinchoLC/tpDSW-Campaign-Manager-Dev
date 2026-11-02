@@ -52,7 +52,6 @@ export const fichaRepository = {
       posicionX: number;
       posicionY: number;
       estado?: string;
-      imagenUrl?: string;
       personajeId?: number;
       personajeCampanaId?: number;
     }

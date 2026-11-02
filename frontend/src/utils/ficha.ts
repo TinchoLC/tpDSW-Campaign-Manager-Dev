@@ -32,9 +32,9 @@ export function nombreDeFicha(ficha: Ficha): string {
 }
 
 export function imagenDeFicha(ficha: Ficha): string | null {
-  const url = ficha.imagenUrl ?? (ficha.personajeCampana
+  const url = ficha.personajeCampana
     ? ficha.personajeCampana.personaje.imagenUrl
-    : ficha.personaje!.imagenUrl);
+    : ficha.personaje!.imagenUrl;
 
   return resolveAssetUrl(url);
 }

@@ -20,7 +20,6 @@ export interface Ficha {
   posicionX: number;
   posicionY: number;
   estado: string | null;
-  imagenUrl: string | null;
   personaje: { id: number; nombre: string; imagenUrl: string | null } | null;
   personajeCampana: {
     id: number;
