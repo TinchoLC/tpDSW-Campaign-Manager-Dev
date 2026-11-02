@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
+import { useConfirmar } from '../hooks/useConfirmar';
 import { mapaService } from '../services/mapa.service';
 import { resolveAssetUrl } from '../services/api';
 import { mensajeError } from '../utils/form';
@@ -18,8 +19,15 @@ export function MapasPanel({ campanaId, esMaster, escribible }: Props) {
     mapaService.deCampana(campanaId)
   );
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
+  const { confirmar, dialogo } = useConfirmar();
 
-  const eliminarMapa = async (id: number) => {
+  const eliminarMapa = async (id: number, nombre: string) => {
+    if (!(await confirmar({
+      titulo: 'Eliminar mapa',
+      mensaje: `¿Eliminar el mapa "${nombre}"? Se quitan también las fichas que estén en él.`,
+      textoConfirmar: 'Eliminar',
+    }))) return;
+
     setErrorAccion(null);
     try {
       await mapaService.eliminar(id);
@@ -116,7 +124,7 @@ export function MapasPanel({ campanaId, esMaster, escribible }: Props) {
                               Editar
                             </Link>
                             <button
-                              onClick={() => eliminarMapa(mapa.id)}
+                              onClick={() => eliminarMapa(mapa.id, mapa.nombre)}
                               className="btn btn-outline-danger btn-sm"
                             >
                               Eliminar
@@ -132,6 +140,7 @@ export function MapasPanel({ campanaId, esMaster, escribible }: Props) {
           </table>
         </div>
       )}
+      {dialogo}
     </section>
   );
 }
