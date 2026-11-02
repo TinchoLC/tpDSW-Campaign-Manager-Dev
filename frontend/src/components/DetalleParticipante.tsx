@@ -1,10 +1,11 @@
-
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   campanaService,
   type Participante,
   type ParticipanteUpdate,
 } from '../services/campana.service';
+import { rasgoService } from '../services/rasgo.service';
+import type { Rasgo } from '../services/rasgo.service';
 
 interface Props {
   campanaId: number;
@@ -134,6 +135,93 @@ export function DetalleParticipante({
   onActualizado,
 }: Props) {
   const [errorEstado, setErrorEstado] = useState<string | null>(null);
+  const [rasgosDisponibles, setRasgosDisponibles] = useState<Rasgo[]>([]);
+  const [seleccionRasgos, setSeleccionRasgos] = useState<{
+    participanteId: number;
+    ids: number[];
+  }>({
+    participanteId: participante.id,
+    ids: participante.rasgos?.map((rasgo) => rasgo.id) ?? [],
+  });
+  const [rasgosGuardados, setRasgosGuardados] = useState(false);
+
+  const rasgoIdsSeleccionados =
+    seleccionRasgos.participanteId === participante.id
+      ? seleccionRasgos.ids
+      : participante.rasgos?.map((rasgo) => rasgo.id) ?? [];
+
+  const [guardandoRasgos, setGuardandoRasgos] = useState(false);
+  const [errorRasgos, setErrorRasgos] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+
+    const cargarRasgos = async () => {
+      try {
+        const rasgos = await rasgoService.listar(campanaId);
+
+        if (!cancelado) {
+          setRasgosDisponibles(
+            rasgos.filter(
+              (rasgo) =>
+                rasgo.activo &&
+                (rasgo.nivelMinimo === null ||
+                  rasgo.nivelMinimo <= participante.nivel)
+            )
+          );
+        }
+      } catch {
+        if (!cancelado) {
+          setErrorRasgos('No se pudieron cargar los rasgos disponibles.');
+        }
+      }
+    };
+
+    cargarRasgos();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [campanaId, participante.id, participante.nivel]);  
+
+  const cambiarRasgo = (rasgoId: number, seleccionado: boolean) => {
+    setSeleccionRasgos((actual) => {
+      const ids =
+        actual.participanteId === participante.id
+          ? actual.ids
+          : participante.rasgos?.map((rasgo) => rasgo.id) ?? [];
+
+      return {
+        participanteId: participante.id,
+        ids: seleccionado
+          ? [...ids, rasgoId]
+          : ids.filter((id) => id !== rasgoId),
+      };
+    });
+  };
+
+  const guardarRasgos = async () => {
+    try {
+      setGuardandoRasgos(true);
+      setErrorRasgos(null);
+      setRasgosGuardados(false);
+
+      await campanaService.actualizarRasgosParticipante(
+        campanaId,
+        participante.id,
+        rasgoIdsSeleccionados
+      );
+
+      setRasgosGuardados(true);
+      onActualizado();
+    } catch (err) {
+      setErrorRasgos(
+        err instanceof Error ? err.message : 'No se pudieron guardar los rasgos.'
+      );
+    } finally {
+      setGuardandoRasgos(false);
+    }
+  };
 
   const actualizar = async (datos: ParticipanteUpdate) => {
     await campanaService.actualizarParticipante(
@@ -242,6 +330,79 @@ export function DetalleParticipante({
         <option value="inconsciente">Inconsciente</option>
         <option value="muerto">Muerto</option>
       </select>
+
+      <div className="mt-4">
+        <h6 className="fw-bold small text-body-secondary mb-2">
+          Rasgos
+        </h6>
+
+        {rasgosDisponibles.length === 0 ? (
+          <p className="text-body-secondary small">
+            No hay rasgos disponibles para este personaje.
+          </p>
+        ) : (
+          <div
+            className="d-flex flex-column gap-2 border rounded p-2"
+            style={{ maxHeight: '220px', overflowY: 'auto' }}
+          >
+            {rasgosDisponibles.map((rasgo) => (
+              <label
+                key={rasgo.id}
+                className="d-flex align-items-start gap-2"
+              >
+                <input
+                  type="checkbox"
+                  className="form-check-input mt-1"
+                  checked={rasgoIdsSeleccionados.includes(rasgo.id)}
+                  disabled={!editable || guardandoRasgos}
+                  onChange={(e) =>
+                    cambiarRasgo(rasgo.id, e.target.checked)
+                  }
+                />
+
+                <span className="small">
+                  <strong>{rasgo.nombre}</strong>
+
+                  {rasgo.campanaId === null && (
+                    <span className="badge text-bg-secondary ms-2">
+                      General
+                    </span>
+                  )}
+
+                  {rasgo.descripcion && (
+                    <small className="d-block text-body-secondary">
+                      {rasgo.descripcion}
+                    </small>
+                  )}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+
+        {errorRasgos && (
+          <div className="alert alert-danger py-2 small mt-2">
+            {errorRasgos}
+          </div>
+        )}
+
+        {editable && (
+          <button
+            type="button"
+            className="btn btn-sm btn-primary mt-3"
+            onClick={guardarRasgos}
+            disabled={guardandoRasgos}
+          >
+            {guardandoRasgos ? 'Guardando...' : 'Guardar rasgos'}
+          </button>
+        )}
+
+        {rasgosGuardados && (
+          <div className="alert alert-success py-2 small mt-2">
+            Rasgos guardados correctamente.
+          </div>
+        )}
+      </div>     
 
       {errorEstado && (
         <div className="alert alert-danger py-2 small">

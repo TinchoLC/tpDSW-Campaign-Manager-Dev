@@ -32,19 +32,23 @@ async function validarRasgosPersonaje(
 ) {
   if (rasgoIds === undefined || rasgoIds.length === 0) return;
 
-  const ambito =
-    tipo === "jugable"
-      ? { campanaId: null }
-      : { OR: [{ campanaId: null }, { campanaId }] };
-
   const rasgos = await prisma.rasgo.findMany({
     where: {
       id: { in: rasgoIds },
       activo: true,
-      ...ambito,
-      OR: [
-        { nivelMinimo: null },
-        { nivelMinimo: { lte: nivel } },
+      AND: [
+        {
+          OR:
+            tipo === "jugable"
+              ? [{ campanaId: null }]
+              : [{ campanaId: null }, { campanaId }],
+        },
+        {
+          OR: [
+            { nivelMinimo: null },
+            { nivelMinimo: { lte: nivel } },
+          ],
+        },
       ],
     },
     select: { id: true },
@@ -71,7 +75,12 @@ export const personajeService = {
       }
       assertCampanaEscribible(campana);
     }
-
+    await validarRasgosPersonaje(
+      data.rasgoIds,
+      data.tipo,
+      data.tipo === "no_jugable" ? data.campanaId : null,
+      data.tipo === "jugable" ? data.nivel : 1
+    );    
     return personajeRepository.create(data, usuarioId);
   },
 
@@ -91,7 +100,14 @@ export const personajeService = {
 
       assertCampanaEscribible(campana);
     }
-
+    await validarRasgosPersonaje(
+      data.rasgoIds,
+      personaje.tipo as "jugable" | "no_jugable",
+      personaje.campanaId,
+      personaje.tipo === "jugable"
+        ? (("nivel" in data ? data.nivel : undefined) ?? personaje.nivel ?? 1)
+        : 1
+    );    
     return personajeRepository.update(id, data);
   },
 

@@ -69,6 +69,14 @@ export interface Participante {
       nombre: string;
     };
   };
+  rasgos: {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  nivelMinimo: number | null;
+  campanaId: number | null;
+  visibleAJugador: boolean;
+  }[];
 }
 
 export type ParticipanteUpdate = Partial<
@@ -130,6 +138,20 @@ export const campanaService = {
       }
     );
   },
+
+  actualizarRasgosParticipante(
+    campanaId: number,
+    participanteId: number,
+    rasgoIds: number[]
+  ): Promise<Participante> {
+    return apiFetch<Participante>(
+      `/campanas/${campanaId}/participantes/${participanteId}/rasgos`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ rasgoIds }),
+      }
+    );
+  },  
 
 
   // Quita un personaje de la campaña (baja lógica; se pierden sus fichas de los mapas)

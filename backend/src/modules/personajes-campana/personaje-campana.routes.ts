@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import { personajeCampanaController } from "./personaje-campana.controller";

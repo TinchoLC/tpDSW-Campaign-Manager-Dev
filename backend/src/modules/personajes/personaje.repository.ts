@@ -20,8 +20,22 @@ export const personajeRepository = { //repositorio de personajes que tiene los m
 
   findById(id: number) {
     return prisma.personaje.findFirst({
-      where: { id, activo: true }, //solo traer personajes activos
-      include: { instancias: true, campana: true },
+      where: { id, activo: true },
+      include: {
+        instancias: true,
+        campana: true,
+        rasgos: {
+          where: { activo: true },
+          select: {
+            id: true,
+            nombre: true,
+            descripcion: true,
+            nivelMinimo: true,
+            campanaId: true,
+            visibleAJugador: true,
+          },
+        },
+      },
     });
   },
 
@@ -35,17 +49,36 @@ export const personajeRepository = { //repositorio de personajes que tiene los m
     });
   },
 
-  findNpcsByCampana(campanaId: number, estadoAgresion?: string) {
-    return prisma.personaje.findMany({
-      where: {
-        campanaId,
-        tipo: "no_jugable",
-        activo: true,
-        ...(estadoAgresion && { estadoAgresion }),
+findNpcsByCampana(campanaId: number, estadoAgresion?: string) {
+  return prisma.personaje.findMany({
+    where: {
+      campanaId,
+      tipo: "no_jugable",
+      activo: true,
+      ...(estadoAgresion && { estadoAgresion }),
+    },
+    include: {
+      rasgos: {
+        where: {
+          activo: true,
+          OR: [
+            { campanaId: null },
+            { campanaId },
+          ],
+        },
+        select: {
+          id: true,
+          nombre: true,
+          descripcion: true,
+          nivelMinimo: true,
+          campanaId: true,
+          visibleAJugador: true,
+        },
       },
-      orderBy: { id: "asc" },
-    });
-  },
+    },
+    orderBy: { id: "asc" },
+  });
+},
 
   update(
     id: number,

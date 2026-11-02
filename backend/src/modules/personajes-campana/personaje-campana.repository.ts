@@ -1,4 +1,3 @@
-
 import { prisma } from "../../lib/prisma";
 import { UpdatePersonajeCampanaDTO } from "./personaje-campana.dto";
 

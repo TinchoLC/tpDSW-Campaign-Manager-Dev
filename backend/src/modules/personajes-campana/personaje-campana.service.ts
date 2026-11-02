@@ -1,4 +1,3 @@
-
 import { personajeCampanaRepository } from "./personaje-campana.repository";
 import { campanaRepository } from "../campana/campana.repository";
 import { prisma } from "../../lib/prisma";
