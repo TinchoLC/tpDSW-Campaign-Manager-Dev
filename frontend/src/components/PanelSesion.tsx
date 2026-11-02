@@ -43,26 +43,42 @@ export function PanelSesion({
     ? participantes.find((p) => p.id === fichaSeleccionada.personajeCampana?.id)
     : null;
 
-  const [personajeJugableDetalle, setPersonajeJugableDetalle] = useState<Personaje | null>(null);
+  const [personajeJugableDetalle, setPersonajeJugableDetalle] = useState<{
+    personajeId: number;
+    detalle: Personaje;
+  } | null>(null);
 
   useEffect(() => {
-    if (!participanteInfo?.personajeId) {
-      setPersonajeJugableDetalle(null);
-      return;
-    }
+    const personajeId = participanteInfo?.personajeId;
+
+    if (!personajeId) return;
+
     let cancelado = false;
+
     personajeService
-      .obtener(participanteInfo.personajeId)
+      .obtener(personajeId)
       .then((p) => {
-        if (!cancelado) setPersonajeJugableDetalle(p);
+        if (!cancelado) {
+          setPersonajeJugableDetalle({
+            personajeId,
+            detalle: p,
+          });
+        }
       })
       .catch(() => {
         if (!cancelado) setPersonajeJugableDetalle(null);
       });
+
     return () => {
       cancelado = true;
     };
   }, [participanteInfo?.personajeId]);
+
+const detalleActual =
+  personajeJugableDetalle &&
+  personajeJugableDetalle.personajeId === participanteInfo?.personajeId
+    ? personajeJugableDetalle.detalle
+    : null;
 
   const npcInfo = fichaSeleccionada?.personaje
     ? npcs.find((n) => n.id === fichaSeleccionada.personaje?.id)
@@ -168,11 +184,11 @@ export function PanelSesion({
                         </span>
                       </div>
 
-                      {personajeJugableDetalle?.especie && (
+                      {detalleActual?.especie && (
                         <div className="list-group-item px-0 py-1 d-flex justify-content-between">
                           <span className="text-body-secondary">Especie:</span>
                           <span className="fw-semibold">
-                            {personajeJugableDetalle.especie}
+                            {detalleActual.especie}
                           </span>
                         </div>
                       )}
@@ -191,9 +207,9 @@ export function PanelSesion({
                       onActualizado={onParticipanteActualizado}
                     />
 
-                    {personajeJugableDetalle?.descripcion && (
+                    {detalleActual?.descripcion && (
                       <p className="small text-body-secondary border-top pt-2 mt-3 mb-2">
-                        {personajeJugableDetalle.descripcion}
+                        {detalleActual.descripcion}
                       </p>
                     )}
                   </div>
