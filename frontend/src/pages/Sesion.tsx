@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Cargando } from '../components/Cargando';
@@ -33,16 +34,23 @@ async function cargarSesionCompleta(campanaId: number): Promise<DatosSesion> {
   const enJuego = mapas.find((m) => m.estado === 'en_juego');
   const mapa = enJuego ? await mapaService.conFichas(enJuego.id) : null;
 
-  // Obtenemos todos los NPCs de la campaña para que el Master pueda colocarlos
-  // Si no pudo traerlos por permisos (ej. jugador), busca los que estén en las fichas
+  // Obtenemos todos los NPCs de la campaña para que el Master pueda colocarlos.
+  // Si no pudo traerlos por permisos (ej. jugador), busca los que estén en las fichas.
   let npcs: Personaje[] = npcsCampana;
+
   if (npcs.length === 0 && mapa?.fichas) {
     const npcsIds = Array.from(
-      new Set(mapa.fichas.map((f) => f.personaje?.id).filter((id): id is number => id !== undefined))
+      new Set(
+        mapa.fichas
+          .map((f) => f.personaje?.id)
+          .filter((id): id is number => id !== undefined)
+      )
     );
+
     const npcsRaw = await Promise.all(
       npcsIds.map((npcId) => personajeService.obtener(npcId).catch(() => null))
     );
+
     npcs = npcsRaw.filter((n): n is NonNullable<typeof n> => n !== null);
   }
 
@@ -59,71 +67,86 @@ export function Sesion() {
     cargarSesionCompleta(campanaId)
   );
 
-  // Mapa que se está viendo actualmente en la pantalla
-  const [mapaActual, setMapaActual] = useState<MapaConFichas | null>(null);
+  // undefined significa que todavía usamos el mapa recibido desde data.
+  // null significa que se estableció explícitamente que no hay mapa.
+  const [mapaVista, setMapaVista] = useState<MapaConFichas | null | undefined>(undefined);
+
+  // Mapa que se está viendo actualmente en la pantalla.
+  const mapaActual = mapaVista === undefined ? data?.mapa ?? null : mapaVista;
+  // Identificador del mapa actualmente visualizado.
+  const mapaActualId = mapaActual?.id;
+
   const [npcsActuales, setNpcsActuales] = useState<Personaje[]>([]);
-  // Solo se usa cuando el Master previsualiza otro mapa en el desplegable; null significa seguir el mapa "en_juego"
+
+  // Solo se usa cuando el Master previsualiza otro mapa en el desplegable.
+  // null significa seguir el mapa "en_juego".
   const [idMapaSeleccionado, setIdMapaSeleccionado] = useState<number | null>(null);
+
   const [fichaSeleccionadaId, setFichaSeleccionadaId] = useState<number | null>(null);
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
   const [activando, setActivando] = useState(false);
 
   const esMaster = data ? data.campana.usuarioId === usuarioId : false;
 
-  // Sincronizar mapa inicial cuando cargan los datos
-  useEffect(() => {
-    if (data?.mapa && idMapaSeleccionado === null) {
-      setMapaActual(data.mapa);
-    }
-    if (data?.npcs) {
-      setNpcsActuales(data.npcs);
-    }
-  }, [data?.mapa?.id, data?.mapa, idMapaSeleccionado]);
-
-  // 1. Polling liviano (1s): actualiza las fichas del mapa visualizado y detecta si el DM activó otro
+  // 1. Polling liviano (1s): actualiza las fichas del mapa visualizado
+  // y detecta si el DM activó otro.
   useEffect(() => {
     const timer = setInterval(async () => {
       try {
         const mapas = await mapaService.deCampana(campanaId);
         const enJuego = mapas.find((m) => m.estado === 'en_juego');
 
-        // Los jugadores siempre siguen el mapa en_juego; el Master sigue en_juego salvo que esté previsualizando otro
+        // Los jugadores siempre siguen el mapa en_juego;
+        // el Master sigue en_juego salvo que esté previsualizando otro.
         const idAMostrar = (esMaster ? idMapaSeleccionado : null) ?? enJuego?.id;
+
         if (!idAMostrar) {
-          if (mapaActual !== null) setMapaActual(null);
+          if (mapaActualId !== undefined) {
+            setMapaVista(null);
+          }
           return;
         }
 
         const mapaActualizado = await mapaService.conFichas(idAMostrar);
-        setMapaActual(mapaActualizado);
+        setMapaVista(mapaActualizado);
 
-        // Refrescar NPCs: si es master obtiene todos los de la campaña; si no, los que están en fichas
+        // Refrescar NPCs: si es master obtiene todos los de la campaña;
+        // si no, los que están en fichas del mapa.
         try {
           const npcsRefrescados = await campanaService.npcs(campanaId);
+
           if (npcsRefrescados && npcsRefrescados.length > 0) {
             setNpcsActuales(npcsRefrescados);
           }
         } catch {
-          // Si es jugador y da 403, refrescar los de las fichas del mapa
+          // Si es jugador y da 403, refrescar los de las fichas del mapa.
           const npcsIds = Array.from(
-            new Set((mapaActualizado.fichas ?? []).map((f) => f.personaje?.id).filter((id): id is number => id !== undefined))
+            new Set(
+              (mapaActualizado.fichas ?? [])
+                .map((f) => f.personaje?.id)
+                .filter((id): id is number => id !== undefined)
+            )
           );
+
           if (npcsIds.length > 0) {
             const npcsRefrescados = await Promise.all(
               npcsIds.map((npcId) => personajeService.obtener(npcId).catch(() => null))
             );
-            setNpcsActuales(npcsRefrescados.filter((n): n is NonNullable<typeof n> => n !== null));
+
+            setNpcsActuales(
+              npcsRefrescados.filter((n): n is NonNullable<typeof n> => n !== null)
+            );
           }
         }
       } catch {
-        // Silencioso
+        // Silencioso.
       }
     }, REFRESCO_FICHAS_MS);
 
     return () => clearInterval(timer);
-  }, [campanaId, esMaster, idMapaSeleccionado, mapaActual?.id]);
+  }, [ campanaId, esMaster, idMapaSeleccionado, mapaActualId ]);
 
-  // 2. Polling secundario (10s)
+  // 2. Polling secundario (10s).
   useEffect(() => {
     const timer = setInterval(() => {
       recargar();
@@ -146,30 +169,35 @@ export function Sesion() {
 
   const { campana, mapas, participantes, npcs } = data;
   const listaNpcs = npcsActuales.length > 0 ? npcsActuales : npcs;
-  const mapa = mapaActual ?? data.mapa;
+  const mapa = mapaActual;
   const campanaFinalizada = campana.estado === 'finalizada';
 
-  // Cambiar la vista previa del mapa en el select (sin activarlo todavía)
+  // Cambiar la vista previa del mapa en el select (sin activarlo todavía).
   const handleVerOtroMapa = async (nuevoId: number) => {
     if (!nuevoId) return;
+
     setIdMapaSeleccionado(nuevoId);
     setFichaSeleccionadaId(null);
+
     try {
       const mapaCargado = await mapaService.conFichas(nuevoId);
-      setMapaActual(mapaCargado);
+      setMapaVista(mapaCargado);
     } catch (err) {
       setErrorAccion(err instanceof Error ? err.message : 'Error al cargar el mapa');
     }
   };
 
-  // Botón verde: Poner este mapa en juego para toda la sesión
+  // Botón verde: poner este mapa en juego para toda la sesión.
   const handlePonerEnJuego = async () => {
     if (!mapa) return;
+
     setErrorAccion(null);
     setActivando(true);
+
     try {
       await mapaService.activar(mapa.id);
       setIdMapaSeleccionado(null);
+      setMapaVista(undefined);
       recargar();
     } catch (err) {
       setErrorAccion(err instanceof Error ? err.message : 'No se pudo poner el mapa en juego.');
@@ -183,7 +211,7 @@ export function Sesion() {
     setFichaSeleccionadaId(fichaId);
 
     if (mapa) {
-      setMapaActual({
+      setMapaVista({
         ...mapa,
         fichas: mapa.fichas.map((f) =>
           f.id === fichaId ? { ...f, posicionX: destinoX, posicionY: destinoY } : f
@@ -192,25 +220,35 @@ export function Sesion() {
     }
 
     try {
-      await fichaService.mover(fichaId, { posicionX: destinoX, posicionY: destinoY });
+      await fichaService.mover(fichaId, {
+        posicionX: destinoX,
+        posicionY: destinoY,
+      });
     } catch (err) {
       setErrorAccion(err instanceof Error ? err.message : 'No se pudo mover la ficha.');
       recargar();
     }
   };
 
-  const handleColocarFicha = async (datos: { personajeId?: number; personajeCampanaId?: number }) => {
+  const handleColocarFicha = async (datos: {
+    personajeId?: number;
+    personajeCampanaId?: number;
+  }) => {
     if (!mapa) return;
+
     setErrorAccion(null);
 
     let posX = 0;
     let posY = 0;
+
     while (mapa.fichas.some((f) => f.posicionX === posX && f.posicionY === posY)) {
       posX++;
+
       if (posX >= mapa.columnas) {
         posX = 0;
         posY++;
       }
+
       if (posY >= mapa.filas) break;
     }
 
@@ -220,9 +258,11 @@ export function Sesion() {
         posicionY: posY,
         ...datos,
       });
+
       setFichaSeleccionadaId(nuevaFicha.id);
+
       const mapaActualizado = await mapaService.conFichas(mapa.id);
-      setMapaActual(mapaActualizado);
+      setMapaVista(mapaActualizado);
     } catch (err) {
       setErrorAccion(err instanceof Error ? err.message : 'No se pudo colocar la ficha.');
     }
@@ -232,8 +272,9 @@ export function Sesion() {
     try {
       await fichaService.eliminar(fichaId);
       setFichaSeleccionadaId(null);
+
       if (mapa) {
-        setMapaActual({
+        setMapaVista({
           ...mapa,
           fichas: mapa.fichas.filter((f) => f.id !== fichaId),
         });
@@ -257,7 +298,11 @@ export function Sesion() {
       {errorAccion && (
         <div className="alert alert-danger alert-dismissible py-2 mb-2" role="alert">
           {errorAccion}
-          <button type="button" className="btn-close" onClick={() => setErrorAccion(null)} />
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => setErrorAccion(null)}
+          />
         </div>
       )}
 
@@ -278,9 +323,16 @@ export function Sesion() {
                     className="form-select form-select-sm"
                     style={{ width: 'auto' }}
                     defaultValue=""
-                    onChange={(e) => { const id = Number(e.target.value); if (id) { mapaService.activar(id).then(() => recargar()); } }}
+                    onChange={(e) => {
+                      const id = Number(e.target.value);
+                      if (id) {
+                        mapaService.activar(id).then(() => recargar());
+                      }
+                    }}
                   >
-                    <option value="" disabled>Seleccionar mapa para la sesión...</option>
+                    <option value="" disabled>
+                      Seleccionar mapa para la sesión...
+                    </option>
                     {mapas.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.nombre} ({m.columnas}x{m.filas})
@@ -298,10 +350,11 @@ export function Sesion() {
           )}
         </div>
       ) : (
-        /* Distribución: Izquierda (Panel 4 cols) y Derecha (Mapa 8 cols) */
+        /* Distribución: izquierda (Panel 4 cols) y derecha (Mapa 8 cols). */
         <div className="row g-4 align-items-start">
           <div className="col-lg-4 col-md-5">
             <PanelSesion
+              campanaId={campanaId}
               fichas={mapa.fichas}
               participantes={participantes}
               npcs={listaNpcs}
@@ -312,11 +365,12 @@ export function Sesion() {
               onSeleccionarFicha={setFichaSeleccionadaId}
               onColocarFicha={handleColocarFicha}
               onEliminarFicha={handleEliminarFicha}
+              onParticipanteActualizado={recargar}
             />
           </div>
 
           <div className="col-lg-8 col-md-7">
-            {/* Cabecera del Mapa: Título, Celdas y Selector/Botón de activar */}
+            {/* Cabecera del mapa: título, celdas y selector/botón de activar. */}
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
               <div className="d-flex align-items-baseline gap-2">
                 <h4 className="mb-0 fw-bold">{mapa.nombre}</h4>
@@ -326,12 +380,14 @@ export function Sesion() {
                 {estaEnJuego && <span className="badge bg-success">En juego</span>}
               </div>
 
-              {/* Controles del Master para ver y activar mapas */}
+              {/* Controles del Master para ver y activar mapas. */}
               {esMaster && !campanaFinalizada && mapas.length > 0 && (
                 <div className="d-flex align-items-center gap-2">
                   {mapas.length > 1 && (
                     <>
-                      <label className="small text-body-secondary text-nowrap">Cambiar mapa:</label>
+                      <label className="small text-body-secondary text-nowrap">
+                        Cambiar mapa:
+                      </label>
                       <select
                         className="form-select form-select-sm"
                         style={{ width: 'auto' }}
