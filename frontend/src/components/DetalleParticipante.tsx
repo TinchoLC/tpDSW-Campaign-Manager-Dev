@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   campanaService,
   type Participante,
@@ -35,10 +35,6 @@ function CampoEditable({
   const [valor, setValor] = useState(String(value ?? ''));
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState(false);
-
-  useEffect(() => {
-    setValor(String(value ?? ''));
-  }, [value]);
 
   const guardar = async () => {
     const original = String(value ?? '');
@@ -154,17 +150,18 @@ export function DetalleParticipante({
     min?: number,
     tipo: 'text' | 'number' = 'number'
   ) => (
-    <CampoEditable
-      label={label}
-      value={participante[propiedad] as string | number | null}
-      editable={editable}
-      tipo={tipo}
-      min={min}
-      nullable={propiedad !== 'nombre'}
-      onGuardar={(value) =>
-        actualizar({ [propiedad]: value } as ParticipanteUpdate)
-      }
-    />
+        <CampoEditable
+          key={`${participante.id}-${propiedad}-${String(participante[propiedad] ?? '')}`}
+          label={label}
+          value={participante[propiedad] as string | number | null}
+          editable={editable}
+          tipo={tipo}
+          min={min}
+          nullable={propiedad !== 'nombre'}
+          onGuardar={(value) =>
+            actualizar({ [propiedad]: value } as ParticipanteUpdate)
+          }
+        />
   );
 
   const cambiarEstado = async (estado: Participante['estado']) => {
