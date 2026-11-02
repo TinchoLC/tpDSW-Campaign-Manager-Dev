@@ -6,6 +6,7 @@ import { rasgoService, type Rasgo } from '../services/rasgo.service';
 import { mensajeError, num, txt } from '../utils/form';
 import { Cargando } from './Cargando';
 import { ErrorAlert } from './ErrorAlert';
+import { useConfirmar } from '../hooks/useConfirmar';
 
 interface DatosRasgo {
   nombre: string;
@@ -98,6 +99,7 @@ interface Props {
 export function RasgosPanel({ titulo, campanaId, esMaster = false }: Props) {
   const { usuario } = useAuth();
   const esAdmin = usuario?.tipo === 'admin';
+  const { confirmar, dialogo } = useConfirmar();
 
   const { data: datos, error, loading: cargando, recargar } = useApi(
     `rasgos-${campanaId ?? 'generales'}`,
@@ -131,7 +133,7 @@ export function RasgosPanel({ titulo, campanaId, esMaster = false }: Props) {
   };
 
   const eliminar = async (r: Rasgo) => {
-    if (!window.confirm(`¿Eliminar el rasgo "${r.nombre}"?`)) return;
+    if (!(await confirmar({ titulo: 'Eliminar rasgo', mensaje: `¿Eliminar el rasgo "${r.nombre}"?`, textoConfirmar: 'Eliminar' }))) return;
     setErrorAccion(null);
     try {
       await rasgoService.eliminar(r.id);
@@ -140,7 +142,6 @@ export function RasgosPanel({ titulo, campanaId, esMaster = false }: Props) {
       setErrorAccion(mensajeError(err));
     }
   };
-
   return (
     <section className="mb-4">
       <div className="d-flex justify-content-between align-items-center mb-2">
@@ -202,6 +203,7 @@ export function RasgosPanel({ titulo, campanaId, esMaster = false }: Props) {
           ))}
         </div>
       )}
+      {dialogo}
     </section>
   );
 }

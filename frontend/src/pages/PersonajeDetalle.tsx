@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { personajeService } from '../services/personaje.service';
 import { mensajeError } from '../utils/form';
+import { useConfirmar } from '../hooks/useConfirmar';
 
 const ESTADISTICAS = [
   ['fuerza', 'Fuerza'],
@@ -24,7 +25,7 @@ export function PersonajeDetalle() {
   const personajeId = Number(id);
   const { usuario } = useAuth();
   const navigate = useNavigate();
-
+  const { confirmar, dialogo } = useConfirmar();
   const { data: p, error, loading: cargando } = useApi(`personaje-${personajeId}`, () =>
     personajeService.obtener(personajeId)
   );
@@ -41,8 +42,7 @@ export function PersonajeDetalle() {
   const campanasActivas = p.instancias.filter((i) => i.activo);
 
   const eliminar = async () => {
-    if (!window.confirm(`¿Eliminar a ${p.nombre}?`)) return;
-
+    if (!(await confirmar({ titulo: 'Eliminar personaje', mensaje: `¿Eliminar a ${p.nombre}?`, textoConfirmar: 'Eliminar' }))) return;
     setErrorAccion(null);
     try {
       await personajeService.eliminar(p.id);
@@ -135,6 +135,7 @@ export function PersonajeDetalle() {
           Pertenece a la campaña <Link to={`/campanas/${p.campana.id}`}>{p.campana.nombre}</Link>.
         </p>
       )}
+      {dialogo}
     </main>
   );
 }
