@@ -1,5 +1,13 @@
 import { z } from "zod";
 import { estadoAgresionEnum } from "../../lib/estadoAgresionEnum";
+
+const rasgoIdsSchema = z
+  .array(z.number().int().positive())
+  .refine((ids) => new Set(ids).size === ids.length, {
+    message: "No se pueden repetir rasgos",
+  })
+  .optional();
+
 // Campos que comparten tanto Jugable como NoJugable
 const camposComunes = z.object({
   nombre: z.string().min(1).max(100),
@@ -16,6 +24,7 @@ const camposComunes = z.object({
   inteligencia: z.number().int().positive().optional(),
   carisma: z.number().int().positive().optional(),
   sabiduria: z.number().int().positive().optional(),
+  rasgoIds: rasgoIdsSchema,
 });
 
 const createJugableSchema = camposComunes.extend({

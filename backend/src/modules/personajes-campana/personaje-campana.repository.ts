@@ -5,40 +5,63 @@ import { UpdatePersonajeCampanaDTO } from "./personaje-campana.dto";
 // Lo que ve cualquier participante de la campaña
 // (no incluye estadísticas ni inventario).
 
-const participanteSelect = {
-  id: true,
-  nombre: true,
-  armadura: true,
-  iniciativa: true,
-  velocidad: true,
-  vidaMax: true,
-  vidaActual: true,
-  nivel: true,
-  oro: true,
-  experiencia: true,
-  clase: true,
-  manaMax: true,
-  manaActual: true,
-  fuerza: true,
-  destreza: true,
-  constitucion: true,
-  inteligencia: true,
-  carisma: true,
-  sabiduria: true,
-  estado: true,
-  personajeId: true,
-  personaje: {
-    select: {
-      imagenUrl: true,
-      usuario: {
-        select: {
-          id: true,
-          nombre: true,
+function participanteSelect(campanaId: number, esMaster: boolean) {
+  return {
+    id: true,
+    nombre: true,
+    armadura: true,
+    iniciativa: true,
+    velocidad: true,
+    vidaMax: true,
+    vidaActual: true,
+    nivel: true,
+    oro: true,
+    experiencia: true,
+    clase: true,
+    manaMax: true,
+    manaActual: true,
+    fuerza: true,
+    destreza: true,
+    constitucion: true,
+    inteligencia: true,
+    carisma: true,
+    sabiduria: true,
+    estado: true,
+    personajeId: true,
+    campanaId: true,
+
+    rasgos: {
+      where: {
+        activo: true,
+        OR: [
+          { campanaId: null },
+          { campanaId },
+        ],
+        ...(esMaster ? {} : { visibleAJugador: true }),
+      },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        nivelMinimo: true,
+        campanaId: true,
+        visibleAJugador: true,
+      },
+    },
+
+    personaje: {
+      select: {
+        imagenUrl: true,
+        usuario: {
+          select: {
+            id: true,
+            nombre: true,
+          },
         },
       },
     },
-  },
-} as const;
+  };
+}
 
 
 // Personaje jugable activo con el kit que se copia a la instancia.
@@ -65,7 +88,7 @@ function buscarPersonajeParaVincular(
         select: { id: true },
       },
       rasgos: {
-        where: delKit,
+        where: { activo: true, campanaId: null },
         select: { id: true },
       },
     },
@@ -156,6 +179,24 @@ export const personajeCampanaRepository = {
     });
   },
 
+  findActivaConNivel(id: number, campanaId: number) {
+  return prisma.personajeCampana.findFirst({
+    where: { id, campanaId, activo: true },
+    select: { id: true, nivel: true },
+  });
+},
+
+actualizarRasgos(id: number, rasgoIds: number[]) {
+  return prisma.personajeCampana.update({
+    where: { id },
+    data: {
+      rasgos: {
+        set: rasgoIds.map((rasgoId) => ({ id: rasgoId })),
+      },
+    },
+  });
+},
+
   // Actualiza exclusivamente los campos editables de la instancia.
   update(id: number, data: UpdatePersonajeCampanaDTO) {
     return prisma.personajeCampana.update({
@@ -164,10 +205,10 @@ export const personajeCampanaRepository = {
     });
   },
 
-  findActivasByCampana(campanaId: number) {
+  findActivasByCampana(campanaId: number, esMaster: boolean) {
     return prisma.personajeCampana.findMany({
       where: { campanaId, activo: true },
-      select: participanteSelect,
+      select: participanteSelect(campanaId, esMaster),
       orderBy: { id: "asc" },
     });
   },

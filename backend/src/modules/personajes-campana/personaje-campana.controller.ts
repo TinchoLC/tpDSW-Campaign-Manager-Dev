@@ -4,6 +4,7 @@ import { idSchema } from "../../lib/schemas";
 import {
   vincularPersonajeSchema,
   updatePersonajeCampanaSchema,
+  actualizarRasgosSchema,
 } from "./personaje-campana.dto";
 import { personajeCampanaService } from "./personaje-campana.service";
 
@@ -59,6 +60,30 @@ export const personajeCampanaController = {
       next(err);
     }
   },
+
+  async actualizarRasgos(
+  req: Request,
+  res: Response,
+  next: NextFunction
+  ) {
+  try {
+    const campanaId = idSchema.parse(req.params.campanaId);
+    const id = idSchema.parse(req.params.id);
+
+    const { rasgoIds } = actualizarRasgosSchema.parse(req.body);
+
+    const instancia = await personajeCampanaService.actualizarRasgos(
+      campanaId,
+      id,
+      rasgoIds,
+      req.user.id
+    );
+
+    res.json(instancia);
+  } catch (error) {
+    next(error);
+  }
+},
 
   async desvincular(req: Request, res: Response, next: NextFunction) {
     try {

@@ -57,11 +57,19 @@ export const personajeCampanaService = {
     const campana = await getCampanaOrFail(campanaId);
 
     const rol = await getRolEnCampana(campana, usuarioId);
+
     if (!rol) {
-      throw new ForbiddenError("Solo el master y los jugadores de la campaña pueden ver sus participantes");
+      throw new ForbiddenError(
+        "Solo el master y los jugadores de la campaña pueden ver sus participantes"
+      );
     }
 
-    return personajeCampanaRepository.findActivasByCampana(campanaId);
+    const esMaster = rol === "master";
+
+    return personajeCampanaRepository.findActivasByCampana(
+      campanaId,
+      esMaster
+    );
   },
 
   // Modifica una instancia de PersonajeCampana.
@@ -78,6 +86,8 @@ export const personajeCampanaService = {
       id,
       campanaId
     );
+
+    
 
     if (!instancia) {
       throw new NotFoundError("El personaje no participa en esta campaña");
@@ -140,6 +150,62 @@ export const personajeCampanaService = {
 
     return personajeCampanaRepository.update(id, datosActualizados);
   },
+  
+  async actualizarRasgos(
+  campanaId: number,
+  id: number,
+  rasgoIds: number[],
+  usuarioId: number
+) {
+  const campana = await getCampanaOrFail(campanaId);
+
+  if (campana.usuarioId !== usuarioId) {
+    throw new ForbiddenError(
+      "Solo el master de la campaña puede modificar los rasgos de sus participantes"
+    );
+  }
+
+  assertCampanaEscribible(campana);
+
+  const instancia =
+    await personajeCampanaRepository.findActivaConNivel(id, campanaId);
+
+  if (!instancia) {
+    throw new NotFoundError(
+      "El personaje no participa en esta campaña"
+    );
+  }
+
+  const rasgos = await prisma.rasgo.findMany({
+    where: {
+      id: { in: rasgoIds },
+      activo: true,
+      AND: [
+        {
+          OR: [
+            { campanaId: null },
+            { campanaId },
+          ],
+        },
+        {
+          OR: [
+            { nivelMinimo: null },
+            { nivelMinimo: { lte: instancia.nivel } },
+          ],
+        },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (rasgos.length !== rasgoIds.length) {
+    throw new BadRequestError(
+      "Uno o más rasgos no existen, no pertenecen a esta campaña o requieren un nivel superior"
+    );
+  }
+
+  return personajeCampanaRepository.actualizarRasgos(id, rasgoIds);
+},
 
   // Lo desvincula el master de la campaña o el dueño del personaje
   async desvincular(campanaId: number, id: number, usuarioId: number) {

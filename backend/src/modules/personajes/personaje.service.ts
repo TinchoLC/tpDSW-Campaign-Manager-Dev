@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { Prisma } from "../../generated/prisma/client";
 import { darDeBajaPersonajes } from "../../lib/baja-logica";
 import { campanaAccesoSelect, assertCampanaEscribible } from "../../lib/campana-acceso";
-import { ForbiddenError, NotFoundError } from "../../lib/errors";
+import { ForbiddenError, NotFoundError, BadRequestError } from "../../lib/errors";
 
 
 async function assertCanModify(
@@ -21,6 +21,39 @@ async function assertCanModify(
   const campana = await prisma.campana.findUnique({ where: { id: personaje.campanaId! } });
   if (!campana || campana.usuarioId !== usuarioId) {
     throw new ForbiddenError("Solo el DM de la campaña puede modificar este NPC");
+  }
+}
+
+async function validarRasgosPersonaje(
+  rasgoIds: number[] | undefined,
+  tipo: "jugable" | "no_jugable",
+  campanaId: number | null,
+  nivel: number
+) {
+  if (rasgoIds === undefined || rasgoIds.length === 0) return;
+
+  const ambito =
+    tipo === "jugable"
+      ? { campanaId: null }
+      : { OR: [{ campanaId: null }, { campanaId }] };
+
+  const rasgos = await prisma.rasgo.findMany({
+    where: {
+      id: { in: rasgoIds },
+      activo: true,
+      ...ambito,
+      OR: [
+        { nivelMinimo: null },
+        { nivelMinimo: { lte: nivel } },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (rasgos.length !== rasgoIds.length) {
+    throw new BadRequestError(
+      "Uno o más rasgos no existen, no están disponibles para este personaje o requieren un nivel superior"
+    );
   }
 }
 

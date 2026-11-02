@@ -44,6 +44,18 @@ export const updatePersonajeCampanaSchema = z.object({
   message: "Debe indicarse al menos un campo para modificar",
 });
 
+export const actualizarRasgosSchema = z.object({
+  rasgoIds: z
+    .array(idSchema)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "No se pueden repetir rasgos",
+    }),
+});
+
+export type ActualizarRasgosDTO = z.infer<
+  typeof actualizarRasgosSchema
+>;
+
 export type UpdatePersonajeCampanaDTO = z.infer<
   typeof updatePersonajeCampanaSchema
 >;

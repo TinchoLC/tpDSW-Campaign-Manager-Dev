@@ -214,4 +214,56 @@ router.get("/", personajeCampanaController.listar);
 router.patch("/:id", personajeCampanaController.actualizar);
 router.delete("/:id", personajeCampanaController.desvincular);
 
+
+/**
+ * @swagger
+ * /campanas/{campanaId}/participantes/{id}/rasgos:
+ *   patch:
+ *     summary: Reemplazar los rasgos de un participante
+ *     description: >
+ *       Permite al master reemplazar los rasgos de una instancia.
+ *       Solo admite rasgos generales o específicos de esta campaña
+ *       que estén activos y cumplan el nivel mínimo.
+ *     tags: [Participantes]
+ *     parameters:
+ *       - in: path
+ *         name: campanaId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la instancia PersonajeCampana
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [rasgoIds]
+ *             properties:
+ *               rasgoIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [1, 3, 5]
+ *     responses:
+ *       200:
+ *         description: Rasgos actualizados correctamente
+ *       400:
+ *         description: Rasgos inválidos o nivel insuficiente
+ *       401:
+ *         description: Token inválido o ausente
+ *       403:
+ *         description: Solo el master puede modificar los rasgos
+ *       404:
+ *         description: Campaña o participante no encontrados
+ *       409:
+ *         description: La campaña no admite modificaciones
+ */
+router.patch("/:id/rasgos", personajeCampanaController.actualizarRasgos);
+
 export default router;
