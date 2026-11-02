@@ -219,7 +219,7 @@ export function TableroMapa({
             esMia={esFichaDelUsuario(f, usuarioId)}
             puedeMover={puedeMoverFicha(f)}
             estaSeleccionada={fichaSeleccionadaId === f.id}
-            colorBorde={colorBordeFicha(f, usuarioId, npcs)}
+            colorBorde={colorBordeFicha(f, usuarioId)}
             onSeleccionar={onSeleccionarFicha}
           />
         ))}

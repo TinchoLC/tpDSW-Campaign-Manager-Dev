@@ -1,6 +1,5 @@
 import { resolveAssetUrl } from '../services/api';
 import type { Ficha } from '../services/mapa.service';
-import type { Personaje } from '../services/personaje.service';
 
 const COLORES_FICHA = [
   '#0d6efd', 
@@ -58,7 +57,7 @@ export function estaCaida(ficha: Ficha): boolean {
 // - Rojo: NPC Hostil
 // - Verde: NPC Amistoso
 // - Amarillo: NPC Neutral o sin definir
-export function colorBordeFicha(ficha: Ficha, usuarioId: number, npcs: Personaje[]): string {
+export function colorBordeFicha(ficha: Ficha, usuarioId: number): string {
 
   if (ficha.personajeCampana) {
     if (esFichaDelUsuario(ficha, usuarioId)) {
