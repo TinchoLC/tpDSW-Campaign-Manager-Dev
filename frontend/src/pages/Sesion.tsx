@@ -34,8 +34,7 @@ async function cargarSesionCompleta(campanaId: number): Promise<DatosSesion> {
   const enJuego = mapas.find((m) => m.estado === 'en_juego');
   const mapa = enJuego ? await mapaService.conFichas(enJuego.id) : null;
 
-  // Obtenemos todos los NPCs de la campaña para que el Master pueda colocarlos.
-  // Si no pudo traerlos por permisos (ej. jugador), busca los que estén en las fichas.
+  // Si el jugador no puede listar todos los NPCs, cargar los que ya están en las fichas.
   let npcs: Personaje[] = npcsCampana;
 
   if (npcs.length === 0 && mapa?.fichas) {
@@ -67,19 +66,15 @@ export function Sesion() {
     cargarSesionCompleta(campanaId)
   );
 
-  // undefined significa que todavía usamos el mapa recibido desde data.
-  // null significa que se estableció explícitamente que no hay mapa.
+  // undefined usa el mapa inicial; null indica que no hay mapa.
   const [mapaVista, setMapaVista] = useState<MapaConFichas | null | undefined>(undefined);
 
-  // Mapa que se está viendo actualmente en la pantalla.
   const mapaActual = mapaVista === undefined ? data?.mapa ?? null : mapaVista;
-  // Identificador del mapa actualmente visualizado.
   const mapaActualId = mapaActual?.id;
 
   const [npcsActuales, setNpcsActuales] = useState<Personaje[]>([]);
 
-  // Solo se usa cuando el Master previsualiza otro mapa en el desplegable.
-  // null significa seguir el mapa "en_juego".
+  // null hace que el master siga el mapa "en_juego".
   const [idMapaSeleccionado, setIdMapaSeleccionado] = useState<number | null>(null);
 
   const [fichaSeleccionadaId, setFichaSeleccionadaId] = useState<number | null>(null);
@@ -88,16 +83,14 @@ export function Sesion() {
 
   const esMaster = data ? data.campana.usuarioId === usuarioId : false;
 
-  // 1. Polling liviano (1s): actualiza las fichas del mapa visualizado
-  // y detecta si el DM activó otro.
+  // Sondeo rápido para sincronizar mapa y fichas entre participantes.
   useEffect(() => {
     const timer = setInterval(async () => {
       try {
         const mapas = await mapaService.deCampana(campanaId);
         const enJuego = mapas.find((m) => m.estado === 'en_juego');
 
-        // Los jugadores siempre siguen el mapa en_juego;
-        // el Master sigue en_juego salvo que esté previsualizando otro.
+        // Los jugadores siguen el mapa en juego; el master puede previsualizar otro.
         const idAMostrar = (esMaster ? idMapaSeleccionado : null) ?? enJuego?.id;
 
         if (!idAMostrar) {
@@ -110,8 +103,6 @@ export function Sesion() {
         const mapaActualizado = await mapaService.conFichas(idAMostrar);
         setMapaVista(mapaActualizado);
 
-        // Refrescar NPCs: si es master obtiene todos los de la campaña;
-        // si no, los que están en fichas del mapa.
         try {
           const npcsRefrescados = await campanaService.npcs(campanaId);
 
@@ -119,7 +110,7 @@ export function Sesion() {
             setNpcsActuales(npcsRefrescados);
           }
         } catch {
-          // Si es jugador y da 403, refrescar los de las fichas del mapa.
+          // Los jugadores solo pueden cargar los NPCs que ya aparecen en el mapa.
           const npcsIds = Array.from(
             new Set(
               (mapaActualizado.fichas ?? [])
@@ -139,14 +130,14 @@ export function Sesion() {
           }
         }
       } catch {
-        // Silencioso.
+        // No se hace nada; el sondeo es solo para mantener la vista actualizada.
       }
     }, REFRESCO_FICHAS_MS);
 
     return () => clearInterval(timer);
   }, [ campanaId, esMaster, idMapaSeleccionado, mapaActualId ]);
 
-  // 2. Polling secundario (10s).
+  // Sondeo lento para recargar datos generales de la sesión.
   useEffect(() => {
     const timer = setInterval(() => {
       recargar();
@@ -172,7 +163,6 @@ export function Sesion() {
   const mapa = mapaActual;
   const campanaFinalizada = campana.estado === 'finalizada';
 
-  // Cambiar la vista previa del mapa en el select (sin activarlo todavía).
   const handleVerOtroMapa = async (nuevoId: number) => {
     if (!nuevoId) return;
 
@@ -187,7 +177,6 @@ export function Sesion() {
     }
   };
 
-  // Botón verde: poner este mapa en juego para toda la sesión.
   const handlePonerEnJuego = async () => {
     if (!mapa) return;
 
@@ -301,7 +290,6 @@ export function Sesion() {
 
   return (
     <main className="container-fluid py-3 px-md-4">
-      {/* Barra superior con volver y alertas */}
       <div className="d-flex justify-content-between align-items-center mb-2">
         <Link to={`/campanas/${campana.id}`} className="text-decoration-none">
           ← Volver a la campaña
@@ -363,7 +351,6 @@ export function Sesion() {
           )}
         </div>
       ) : (
-        /* Distribución: izquierda (Panel 4 cols) y derecha (Mapa 8 cols). */
         <div className="row g-4 align-items-start">
           <div className="col-lg-4 col-md-5">
             <PanelSesion
@@ -384,7 +371,6 @@ export function Sesion() {
           </div>
 
           <div className="col-lg-8 col-md-7">
-            {/* Cabecera del mapa: título, celdas y selector/botón de activar. */}
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
               <div className="d-flex align-items-baseline gap-2">
                 <h4 className="mb-0 fw-bold">{mapa.nombre}</h4>
@@ -394,7 +380,6 @@ export function Sesion() {
                 {estaEnJuego && <span className="badge bg-success">En juego</span>}
               </div>
 
-              {/* Controles del Master para ver y activar mapas. */}
               {esMaster && !campanaFinalizada && mapas.length > 0 && (
                 <div className="d-flex align-items-center gap-2">
                   {mapas.length > 1 && (
