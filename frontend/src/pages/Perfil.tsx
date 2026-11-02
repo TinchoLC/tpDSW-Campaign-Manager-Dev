@@ -7,11 +7,12 @@ import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { usuarioService, type UpdateUsuarioDTO } from '../services/usuario.service';
 import { mensajeError } from '../utils/form';
+import { useConfirmar } from '../hooks/useConfirmar';
 
 export function Perfil() {
   const { usuario, actualizarUsuario, logout } = useAuth();
   const usuarioId = usuario?.id ?? 0;
-
+  const { confirmar, dialogo } = useConfirmar();
   const { data: perfil, error, loading: cargando, recargar } = useApi(`perfil-${usuarioId}`, () =>
     usuarioService.obtener(usuarioId)
   );
@@ -78,12 +79,11 @@ export function Perfil() {
   };
 
   const eliminarCuenta = async () => {
-    if (
-      !window.confirm(
-        'Se da de baja tu cuenta, tus campañas como master y tus personajes. Esta acción no se puede deshacer. ¿Continuar?'
-      )
-    )
-      return;
+    if (!(await confirmar({
+      titulo: 'Eliminar cuenta',
+      mensaje: 'Se da de baja tu cuenta, tus campañas como master y tus personajes. Esta acción no se puede deshacer. ¿Continuar?',
+      textoConfirmar: 'Eliminar mi cuenta',
+    }))) return;
 
     try {
       await usuarioService.eliminar(usuario.id);
@@ -147,6 +147,7 @@ export function Perfil() {
           Eliminar mi cuenta
         </button>
       </div>
+      {dialogo}
     </main>
   );
 }

@@ -86,7 +86,6 @@ model FichaMapa {
   posicionX Int
   posicionY Int
   estado    String?
-  imagenUrl String?
 
   mapa   Mapa @relation(fields: [mapaId], references: [id])
   mapaId Int
@@ -114,6 +113,7 @@ model Personaje {
   iniciativa  Int?
   velocidad   Int?
   vidaMax     Int?
+  vidaActual  Int?
   activo      Boolean       @default(true) // baja lógica
   imagenUrl   String?
 

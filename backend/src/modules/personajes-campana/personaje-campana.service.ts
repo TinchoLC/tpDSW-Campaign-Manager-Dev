@@ -4,7 +4,13 @@ import { prisma } from "../../lib/prisma";
 import { Prisma } from "../../generated/prisma/client";
 import { darDeBajaInstancias } from "../../lib/baja-logica";
 import { assertCampanaEscribible, getRolEnCampana } from "../../lib/campana-acceso";
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from "../../lib/errors";
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from "../../lib/errors";
+import { UpdatePersonajeCampanaDTO } from "./personaje-campana.dto";
 
 async function getCampanaOrFail(campanaId: number) {
   const campana = await campanaRepository.findParaAcceso(campanaId);
@@ -38,7 +44,8 @@ export const personajeCampanaService = {
     if (existente?.activo) {
       throw new ConflictError("El personaje ya participa en esta campaña");
     }
-    // Si fue desvinculado antes, retoma su instancia (conserva su progreso)
+
+    // Si fue desvinculado antes, retoma su instancia (conserva su progreso).
     if (existente) return personajeCampanaRepository.reactivar(existente.id);
 
     return personajeCampanaRepository.createDesdePersonaje(personaje, campanaId);
@@ -49,12 +56,155 @@ export const personajeCampanaService = {
     const campana = await getCampanaOrFail(campanaId);
 
     const rol = await getRolEnCampana(campana, usuarioId);
+
     if (!rol) {
-      throw new ForbiddenError("Solo el master y los jugadores de la campaña pueden ver sus participantes");
+      throw new ForbiddenError(
+        "Solo el master y los jugadores de la campaña pueden ver sus participantes"
+      );
     }
 
-    return personajeCampanaRepository.findActivasByCampana(campanaId);
+    const esMaster = rol === "master";
+
+    return personajeCampanaRepository.findActivasByCampana(
+      campanaId,
+      esMaster
+    );
   },
+
+  // Modifica una instancia de PersonajeCampana.
+  // Pueden hacerlo el master de la campaña o el dueño del personaje.
+  async update(
+    campanaId: number,
+    id: number,
+    data: UpdatePersonajeCampanaDTO,
+    usuarioId: number
+  ) {
+    const campana = await getCampanaOrFail(campanaId);
+
+    const instancia = await personajeCampanaRepository.findActivaEnCampana(
+      id,
+      campanaId
+    );
+
+    
+
+    if (!instancia) {
+      throw new NotFoundError("El personaje no participa en esta campaña");
+    }
+
+    const esMaster = campana.usuarioId === usuarioId;
+    const esDuenio = instancia.personaje.usuarioId === usuarioId;
+
+    if (!esMaster && !esDuenio) {
+      throw new ForbiddenError(
+        "Solo el master de la campaña o el dueño del personaje pueden modificarlo"
+      );
+    }
+
+    assertCampanaEscribible(campana);
+
+    // Se calculan los valores finales para validar también
+    // las modificaciones parciales.
+    const vidaMaxFinal = data.vidaMax ?? instancia.vidaMax;
+    const vidaActualFinal = data.vidaActual ?? instancia.vidaActual;
+
+    const manaMaxFinal =
+      data.manaMax !== undefined ? data.manaMax : instancia.manaMax;
+
+    const manaActualFinal =
+      data.manaActual !== undefined ? data.manaActual : instancia.manaActual;
+
+    // Validación de vida.
+    if (vidaActualFinal > vidaMaxFinal) {
+      throw new BadRequestError(
+        "La vida actual no puede superar la vida máxima"
+      );
+    }
+
+    // Validación de maná.
+    if (
+      manaActualFinal !== null &&
+      (manaMaxFinal === null || manaActualFinal > manaMaxFinal)
+    ) {
+      throw new BadRequestError(
+        "El maná actual no puede superar el maná máximo, y requiere un maná máximo definido"
+      );
+    }
+
+    // Si la vida llega a cero, el personaje debe quedar muerto.
+    if (vidaActualFinal === 0 && data.estado && data.estado !== "muerto") {
+      throw new BadRequestError(
+        "Un personaje con vida actual igual a cero debe tener estado muerto"
+      );
+    }
+
+    // La muerte se establece automáticamente al llegar a cero de vida.
+    const datosActualizados: UpdatePersonajeCampanaDTO = {
+      ...data,
+    };
+
+    if (vidaActualFinal === 0) {
+      datosActualizados.estado = "muerto";
+    }
+
+    return personajeCampanaRepository.update(id, datosActualizados);
+  },
+  
+  async actualizarRasgos(
+  campanaId: number,
+  id: number,
+  rasgoIds: number[],
+  usuarioId: number
+) {
+  const campana = await getCampanaOrFail(campanaId);
+
+  if (campana.usuarioId !== usuarioId) {
+    throw new ForbiddenError(
+      "Solo el master de la campaña puede modificar los rasgos de sus participantes"
+    );
+  }
+
+  assertCampanaEscribible(campana);
+
+  const instancia =
+    await personajeCampanaRepository.findActivaConNivel(id, campanaId);
+
+  if (!instancia) {
+    throw new NotFoundError(
+      "El personaje no participa en esta campaña"
+    );
+  }
+
+  const rasgos = await prisma.rasgo.findMany({
+    where: {
+      id: { in: rasgoIds },
+      activo: true,
+      AND: [
+        {
+          OR: [
+            { campanaId: null },
+            { campanaId },
+          ],
+        },
+        {
+          OR: [
+            { nivelMinimo: null },
+            { nivelMinimo: { lte: instancia.nivel } },
+          ],
+        },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (rasgos.length !== rasgoIds.length) {
+    throw new BadRequestError(
+      "Uno o más rasgos no existen, no pertenecen a esta campaña o requieren un nivel superior"
+    );
+  }
+
+  return personajeCampanaRepository.actualizarRasgos(id, rasgoIds);
+},
 
   // Lo desvincula el master de la campaña o el dueño del personaje
   async desvincular(campanaId: number, id: number, usuarioId: number) {
@@ -65,12 +215,14 @@ export const personajeCampanaService = {
 
     const esMaster = campana.usuarioId === usuarioId;
     const esDuenio = instancia.personaje.usuarioId === usuarioId;
+
     if (!esMaster && !esDuenio) {
       throw new ForbiddenError("Solo el master o el dueño del personaje pueden desvincularlo");
     }
+
     assertCampanaEscribible(campana);
 
-    // Baja de la instancia y de sus fichas en los mapas (lib/baja-logica.ts)
+    // Baja de la instancia y de sus fichas en los mapas.
     await prisma.$transaction((tx: Prisma.TransactionClient) =>
       darDeBajaInstancias(tx, { id })
     );

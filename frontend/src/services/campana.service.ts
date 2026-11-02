@@ -1,5 +1,5 @@
 import { apiFetch } from './api';
-import type { Personaje } from './personaje.service';
+import type { EstadoAgresion, Personaje } from './personaje.service';
 
 export const ESTADOS_CAMPANA = ['planificada', 'activa', 'pausada', 'finalizada'] as const;
 export type EstadoCampana = (typeof ESTADOS_CAMPANA)[number];
@@ -39,20 +39,51 @@ export interface CampanaUpdate extends Partial<CampanaInput> {
 export type EstadoPersonajeCampana = 'vivo' | 'muerto' | 'inconsciente';
 
 // Lo que ve cualquier participante de una campaña
+
 export interface Participante {
   id: number;
   nombre: string;
-  clase: string | null;
-  nivel: number;
-  estado: EstadoPersonajeCampana;
-  vidaActual: number;
+  armadura: string | null;
+  iniciativa: number | null;
+  velocidad: number | null;
   vidaMax: number;
+  vidaActual: number;
+  nivel: number;
+  oro: number | null;
+  experiencia: number | null;
+  clase: string | null;
+  manaMax: number | null;
+  manaActual: number | null;
+  fuerza: number | null;
+  destreza: number | null;
+  constitucion: number | null;
+  inteligencia: number | null;
+  carisma: number | null;
+  sabiduria: number | null;
+  estado: EstadoPersonajeCampana;
   personajeId: number;
   personaje: {
     imagenUrl: string | null;
-    usuario: { id: number; nombre: string };
+    usuario: {
+      id: number;
+      nombre: string;
+    };
   };
+  rasgos: {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  nivelMinimo: number | null;
+  campanaId: number | null;
+  visibleAJugador: boolean;
+  }[];
 }
+
+export type ParticipanteUpdate = Partial<
+  Omit<Participante, 'id' | 'personajeId' | 'personaje'>
+>;
+
+
 
 export const campanaService = {
   listar(estado?: EstadoCampana): Promise<Campana[]> {
@@ -76,9 +107,10 @@ export const campanaService = {
     return apiFetch<void>(`/campanas/${id}`, { method: 'DELETE' });
   },
 
-  // NPCs de la campaña (por ahora solo los ve el master)
-  npcs(id: number): Promise<Personaje[]> {
-    return apiFetch<Personaje[]>(`/campanas/${id}/npcs`);
+  // NPCs de la campaña (solo los ve el master). Sin filtro devuelve todos.
+  npcs(id: number, estadoAgresion?: EstadoAgresion): Promise<Personaje[]> {
+    const query = estadoAgresion ? `?estadoAgresion=${encodeURIComponent(estadoAgresion)}` : '';
+    return apiFetch<Personaje[]>(`/campanas/${id}/npcs${query}`);
   },
 
   // Solo responde para el master y los jugadores; al resto le devuelve 403
@@ -93,6 +125,35 @@ export const campanaService = {
       body: JSON.stringify({ personajeId }),
     });
   },
+  
+  actualizarParticipante(
+    campanaId: number,
+    participanteId: number,
+    datos: ParticipanteUpdate
+  ): Promise<Participante> {
+    return apiFetch<Participante>(
+      `/campanas/${campanaId}/participantes/${participanteId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(datos),
+      }
+    );
+  },
+
+  actualizarRasgosParticipante(
+    campanaId: number,
+    participanteId: number,
+    rasgoIds: number[]
+  ): Promise<Participante> {
+    return apiFetch<Participante>(
+      `/campanas/${campanaId}/participantes/${participanteId}/rasgos`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ rasgoIds }),
+      }
+    );
+  },  
+
 
   // Quita un personaje de la campaña (baja lógica; se pierden sus fichas de los mapas)
   desvincular(campanaId: number, participanteId: number): Promise<void> {

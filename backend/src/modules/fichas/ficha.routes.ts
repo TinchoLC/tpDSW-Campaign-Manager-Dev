@@ -47,8 +47,6 @@ fichasDeMapaRoutes.use(authMiddleware);
  *                 example: 5
  *               estado:
  *                 type: string
- *               imagenUrl:
- *                 type: string
  *     responses:
  *       201:
  *         description: Ficha colocada
@@ -99,8 +97,6 @@ router.use(authMiddleware);
  *                 type: integer
  *                 minimum: 0
  *               estado:
- *                 type: string
- *               imagenUrl:
  *                 type: string
  *     responses:
  *       200:

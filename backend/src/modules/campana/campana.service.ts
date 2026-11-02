@@ -6,14 +6,12 @@ import { ForbiddenError, NotFoundError, ConflictError, BadRequestError } from ".
 import { darDeBajaCampanas } from "../../lib/baja-logica";
 import { personajeRepository } from "../personajes/personaje.repository";
 
-
-// Transiciones válidas según "Reglas de negocio.txt":
 // planificada → activa → pausada ⇄ activa → finalizada
 const TRANSICIONES_VALIDAS: Record<EstadoCampanaDTO, EstadoCampanaDTO[]> = {
   planificada: ["activa"],
   activa: ["pausada", "finalizada"],
   pausada: ["activa"],
-  finalizada: [], // estado terminal
+  finalizada: [], 
 };
 
 function assertTransicionValida(actual: EstadoCampanaDTO, nuevo: EstadoCampanaDTO) {
