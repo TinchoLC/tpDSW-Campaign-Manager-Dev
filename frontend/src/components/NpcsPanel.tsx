@@ -8,6 +8,7 @@ import { Cargando } from './Cargando';
 import { ErrorAlert } from './ErrorAlert';
 import { AgresionBadge } from './Badges';
 import { Avatar } from './Avatar';
+import { useConfirmar } from '../hooks/useConfirmar';
 
 interface Props {
   campana: Campana;
@@ -20,9 +21,10 @@ export function NpcsPanel({ campana, escribible }: Props) {
     campanaService.npcs(campana.id)
   );
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
+  const { confirmar, dialogo } = useConfirmar();
 
   const eliminar = async (npc: Personaje) => {
-    if (!window.confirm(`¿Eliminar al NPC ${npc.nombre}?`)) return;
+    if (!(await confirmar({ titulo: 'Eliminar NPC', mensaje: `¿Eliminar al NPC ${npc.nombre}?`, textoConfirmar: 'Eliminar' }))) return;
     setErrorAccion(null);
     try {
       await personajeService.eliminar(npc.id);
@@ -86,6 +88,7 @@ export function NpcsPanel({ campana, escribible }: Props) {
           </table>
         </div>
       )}
+      {dialogo}
     </section>
   );
 }

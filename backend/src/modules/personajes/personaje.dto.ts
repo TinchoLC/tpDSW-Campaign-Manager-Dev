@@ -11,7 +11,7 @@ const rasgoIdsSchema = z
 // Campos que comparten tanto Jugable como NoJugable
 const camposComunes = z.object({
   nombre: z.string().min(1).max(100),
-  descripcion: z.string().optional(),
+  descripcion: z.string().max(500).optional(),
   especie: z.string().optional(),
   imagenUrl: z.string().nullable().optional(),
   armadura: z.string().optional(),
