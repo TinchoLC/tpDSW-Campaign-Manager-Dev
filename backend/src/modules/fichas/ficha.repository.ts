@@ -3,13 +3,13 @@ import { UpdateFichaDTO } from "./ficha.dto";
 import { campanaAccesoSelect } from "../../lib/campana-acceso";
 
 export const fichaInclude = {
-  personaje: { select: { id: true, nombre: true, imagenUrl: true } },
+  personaje: { select: { id: true, nombre: true, imagenUrl: true, estadoAgresion: true } }, // npc
   personajeCampana: {
     select: {
       id: true,
       nombre: true,
       estado: true,
-      personaje: { select: { usuarioId: true, imagenUrl: true } },
+      personaje: { select: { usuarioId: true, imagenUrl: true } }, // jugador
     },
   },
 } as const;

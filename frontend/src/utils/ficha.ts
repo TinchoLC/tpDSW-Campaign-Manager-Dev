@@ -67,8 +67,7 @@ export function colorBordeFicha(ficha: Ficha, usuarioId: number, npcs: Personaje
     return '#0d6efd'; 
   }
 
-  const npc = npcs.find((n) => n.id === ficha.personaje?.id);
-  const agresion = npc?.estadoAgresion?.toLowerCase();
+  const agresion = ficha.personaje?.estadoAgresion?.toLowerCase() 
 
   if (agresion === 'hostil') {
     return '#dc3545'; 

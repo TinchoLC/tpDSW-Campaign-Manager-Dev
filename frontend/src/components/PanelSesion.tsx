@@ -219,7 +219,7 @@ const detalleActual =
                 )}
 
                 {/* 2. SI ES NPC */}
-                {npcInfo && (
+                {npcInfo && esMaster && (
                   <DetalleNpc
                     npc={npcInfo}
                     editable={esMaster && !campanaFinalizada}

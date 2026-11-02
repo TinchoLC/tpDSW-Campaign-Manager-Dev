@@ -276,12 +276,6 @@ export function DetalleNpc({ npc, editable, onActualizado }: Props) {
 
   return (
     <div>
-      {!editable && (
-        <div className="alert alert-secondary py-2 small">
-          Solo podés visualizar los datos de este NPC.
-        </div>
-      )}
-
       <h6 className="fw-bold small text-body-secondary mb-2">
         Información del NPC
       </h6>
