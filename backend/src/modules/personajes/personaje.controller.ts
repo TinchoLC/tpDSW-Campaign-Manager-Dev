@@ -3,11 +3,10 @@ import { personajeService } from "./personaje.service";
 import {
   createPersonajeSchema,
   updateJugableSchema,
-  updateNoJugableSchema,
 } from "./personaje.dto";
 import { idSchema } from "../../lib/schemas";
 
-export const personajeController = { //controlador de personajes que tiene los metodos de crear, actualizar, traer todos los personajes de un usuario, traer un personaje por id y eliminar un personaje por id y validar que el usuario sea el mismo que el del token y que el personaje sea jugable o no jugable y usar el schema correspondiente
+export const personajeController = {
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const data = createPersonajeSchema.parse(req.body);
@@ -21,9 +20,7 @@ export const personajeController = { //controlador de personajes que tiene los m
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = idSchema.parse(req.params.id);
-      const personajeExistente = await personajeService.getOneVisible(id, req.user.id); // Actualiza un personaje: valida permiso de acceso, elige el schema según el tipo y valida el body.
-      const schema = personajeExistente.tipo === "jugable" ? updateJugableSchema : updateNoJugableSchema;
-      const data = schema.parse(req.body);
+      const data = updateJugableSchema.parse(req.body);
       const personaje = await personajeService.update(id, data, req.user.id);
       res.json(personaje);
     } catch (err) {

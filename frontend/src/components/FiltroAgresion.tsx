@@ -1,4 +1,4 @@
-import type { EstadoAgresion } from '../services/personaje.service';
+import type { EstadoAgresion } from '../services/npc-campana.service';
 
 export type FiltroAgresionValor = EstadoAgresion | 'todos';
 

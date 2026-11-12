@@ -179,6 +179,5 @@ router.delete("/:id", campanaController.delete);
  *       404:
  *         description: Campaña no encontrada
  */
-router.get("/:id/npcs", campanaController.getNpcs);
 
 export default router;

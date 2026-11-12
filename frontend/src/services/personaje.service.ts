@@ -1,12 +1,7 @@
 import { apiFetch } from './api';
-import type { Campana } from './campana.service';
 
-export type TipoPersonaje = 'jugable' | 'no_jugable';
-export type EstadoAgresion = 'hostil' | 'neutral' | 'amistoso';
-
-export interface Personaje {
+export interface DatosPersonaje {
   id: number;
-  tipo: TipoPersonaje;
   nombre: string;
   descripcion: string | null;
   imagenUrl: string | null;
@@ -15,7 +10,6 @@ export interface Personaje {
   iniciativa: number | null;
   velocidad: number | null;
   vidaMax: number | null;
-  vidaActual: number | null;
   fuerza: number | null;
   destreza: number | null;
   constitucion: number | null;
@@ -30,29 +24,25 @@ export interface Personaje {
     campanaId: number | null;
     visibleAJugador: boolean;
   }[];
-  // solo jugables
+  activo: boolean;
+}
+
+export interface Personaje extends DatosPersonaje {
+  tipo: 'jugable';
   clase: string | null;
   nivel: number | null;
   manaMax: number | null;
   experiencia: number | null;
   oro: number | null;
-  // solo NPCs
-  estadoAgresion: string | null;
-  campanaId: number | null;
-  usuarioId: number; // quien lo creó
-  activo: boolean;
+  usuarioId: number;
 }
 
 export interface PersonajeDetalle extends Personaje {
-  campana: Campana | null;
   instancias: { id: number; campanaId: number; activo: boolean }[];
 }
 
-// Al crear se manda "tipo" (y "campanaId" si es NPC). Al editar no se pueden cambiar.
-export interface PersonajeInput {
+export interface DatosPersonajeInput {
   imagenUrl?: string | null;
-  tipo?: TipoPersonaje;
-  campanaId?: number;
   nombre?: string;
   descripcion?: string;
   especie?: string;
@@ -60,7 +50,6 @@ export interface PersonajeInput {
   iniciativa?: number;
   velocidad?: number;
   vidaMax?: number;
-  vidaActual?: number | null;
   fuerza?: number;
   destreza?: number;
   constitucion?: number;
@@ -68,12 +57,15 @@ export interface PersonajeInput {
   carisma?: number;
   sabiduria?: number;
   rasgoIds?: number[];
+}
+
+export interface PersonajeInput extends DatosPersonajeInput {
+  tipo?: 'jugable';
   clase?: string;
   nivel?: number;
   manaMax?: number;
   experiencia?: number;
   oro?: number;
-  estadoAgresion?: EstadoAgresion;
 }
 
 export const personajeService = {

@@ -15,7 +15,7 @@ fichasDeMapaRoutes.use(authMiddleware);
  *   post:
  *     summary: Colocar una ficha en el mapa
  *     description: >
- *       Indicar exactamente uno de personajeId (un NPC de la campaña, solo el master)
+ *       Indicar exactamente uno de npcCampanaId (un NPC de la campaña, solo el master)
  *       o personajeCampanaId (la instancia de un personaje jugable; el master o su dueño).
  *       La posición son celdas de la grilla, desde 0.
  *     tags: [Fichas]
@@ -33,7 +33,7 @@ fichasDeMapaRoutes.use(authMiddleware);
  *             type: object
  *             required: [posicionX, posicionY]
  *             properties:
- *               personajeId:
+ *               npcCampanaId:
  *                 type: integer
  *               personajeCampanaId:
  *                 type: integer

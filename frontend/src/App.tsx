@@ -53,6 +53,9 @@ function AppRoutes() {
           <Route path="/campanas/:id/mapas/:mapaId/editar" element={<MapEditor />} />
           <Route path="/campanas/:campanaId/npcs/nuevo" element={<PersonajeForm />} />
 
+          <Route path="/campanas/:campanaId/npcs/:id" element={<PersonajeDetalle />} />
+          <Route path="/campanas/:campanaId/npcs/:id/editar" element={<PersonajeForm />} />
+
           {/* Personajes */}
           <Route path="/personajes" element={<MisPersonajes />} />
           <Route path="/personajes/nuevo" element={<PersonajeForm />} />

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
-import { campanaService, type Campana } from '../services/campana.service';
-import { personajeService, type Personaje } from '../services/personaje.service';
+import { type Campana } from '../services/campana.service';
+import { npcCampanaService, type NpcCampana } from '../services/npc-campana.service';
 import { mensajeError } from '../utils/form';
 import { Cargando } from './Cargando';
 import { ErrorAlert } from './ErrorAlert';
@@ -22,16 +22,16 @@ export function NpcsPanel({ campana, escribible }: Props) {
 
   const { data: datos, error, loading: cargando, recargar } = useApi(
     `npcs-${campana.id}-${filtro}`,
-    () => campanaService.npcs(campana.id, filtro === 'todos' ? undefined : filtro)
+    () => npcCampanaService.listar(campana.id, filtro === 'todos' ? undefined : filtro)
   );
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
   const { confirmar, dialogo } = useConfirmar();
 
-  const eliminar = async (npc: Personaje) => {
+  const eliminar = async (npc: NpcCampana) => {
     if (!(await confirmar({ titulo: 'Eliminar NPC', mensaje: `¿Eliminar al NPC ${npc.nombre}?`, textoConfirmar: 'Eliminar' }))) return;
     setErrorAccion(null);
     try {
-      await personajeService.eliminar(npc.id);
+      await npcCampanaService.eliminar(campana.id, npc.id);
       recargar();
     } catch (err) {
       setErrorAccion(mensajeError(err));
@@ -77,7 +77,7 @@ export function NpcsPanel({ campana, escribible }: Props) {
                   <td>
                     <div className="d-flex align-items-center gap-2">
                       <Avatar url={npc.imagenUrl} nombre={npc.nombre} tamanio={32} />
-                      <Link to={`/personajes/${npc.id}`}>{npc.nombre}</Link>
+                      <Link to={`/campanas/${campana.id}/npcs/${npc.id}`}>{npc.nombre}</Link>
                     </div>
                   </td>
                   <td className="text-body-secondary text-truncate" style={{ maxWidth: '320px' }} title={npc.descripcion ?? undefined}>
@@ -86,12 +86,12 @@ export function NpcsPanel({ campana, escribible }: Props) {
                   <td><AgresionBadge estado={npc.estadoAgresion} /></td>
                   <td className="text-end">
                     <div className="d-flex gap-2 justify-content-end">
-                      <Link to={`/personajes/${npc.id}`} className="btn btn-outline-primary btn-sm">
+                      <Link to={`/campanas/${campana.id}/npcs/${npc.id}`} className="btn btn-outline-primary btn-sm">
                         Ver
                       </Link>
                       {escribible && (
                         <>
-                          <Link to={`/personajes/${npc.id}/editar`} className="btn btn-outline-secondary btn-sm">
+                          <Link to={`/campanas/${campana.id}/npcs/${npc.id}/editar`} className="btn btn-outline-secondary btn-sm">
                             Editar
                           </Link>
                           <button onClick={() => eliminar(npc)} className="btn btn-outline-danger btn-sm">

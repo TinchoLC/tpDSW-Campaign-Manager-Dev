@@ -7,7 +7,8 @@ import { ErrorAlert } from '../components/ErrorAlert';
 import { ErrorPagina } from '../components/ErrorPagina';
 import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
-import { personajeService } from '../services/personaje.service';
+import { npcCampanaService, type NpcCampanaDetalle } from '../services/npc-campana.service';
+import { personajeService, type PersonajeDetalle as DatosDetalle } from '../services/personaje.service';
 import { mensajeError } from '../utils/form';
 import { useConfirmar } from '../hooks/useConfirmar';
 
@@ -21,32 +22,35 @@ const ESTADISTICAS = [
 ] as const;
 
 export function PersonajeDetalle() {
-  const { id } = useParams();
+  const { id, campanaId } = useParams();
+  const idCampana = campanaId === undefined ? undefined : Number(campanaId);
+  const volverA = idCampana === undefined ? "/personajes" : `/campanas/${idCampana}`;
   const personajeId = Number(id);
   const { usuario } = useAuth();
   const navigate = useNavigate();
   const { confirmar, dialogo } = useConfirmar();
-  const { data: p, error, loading: cargando } = useApi(`personaje-${personajeId}`, () =>
-    personajeService.obtener(personajeId)
+  const { data: p, error, loading: cargando } = useApi<DatosDetalle | NpcCampanaDetalle>(`${volverA}/detalle/${personajeId}`, () =>
+    idCampana === undefined ? personajeService.obtener(personajeId) : npcCampanaService.obtener(idCampana, personajeId)
   );
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
 
   if (cargando) return <Cargando pagina />;
   if (error || !p) {
-    return <ErrorPagina mensaje={error?.message ?? 'Personaje no encontrado'} volverA="/personajes" textoVolver="← Volver a mis personajes" />;
+    return <ErrorPagina mensaje={error?.message ?? 'Personaje no encontrado'} volverA={volverA} textoVolver="← Volver" />;
   }
 
-  const esJugable = p.tipo === 'jugable';
-  // Un jugable lo modifica su creador; un NPC, el master de su campaña
-  const puedeEditar = esJugable ? p.usuarioId === usuario?.id : p.campana?.usuarioId === usuario?.id;
-  const campanasActivas = p.instancias.filter((i) => i.activo);
+  const esJugable = 'instancias' in p;
+  const puedeEditar = esJugable ? p.usuarioId === usuario?.id : true;
+  const campanasActivas = esJugable ? p.instancias.filter((i) => i.activo) : [];
+  const rutaEditar = esJugable ? `/personajes/${p.id}/editar` : `/campanas/${p.campanaId}/npcs/${p.id}/editar`;
 
   const eliminar = async () => {
     if (!(await confirmar({ titulo: 'Eliminar personaje', mensaje: `¿Eliminar a ${p.nombre}?`, textoConfirmar: 'Eliminar' }))) return;
     setErrorAccion(null);
     try {
-      await personajeService.eliminar(p.id);
-      navigate(esJugable ? '/personajes' : `/campanas/${p.campanaId}`);
+      if (esJugable) await personajeService.eliminar(p.id);
+      else await npcCampanaService.eliminar(p.campanaId, p.id);
+      navigate(volverA);
     } catch (err) {
       setErrorAccion(mensajeError(err));
     }
@@ -64,14 +68,14 @@ export function PersonajeDetalle() {
               {!esJugable && <AgresionBadge estado={p.estadoAgresion} />}
             </h2>
             <small className="text-body-secondary">
-              {[p.especie, p.clase, p.nivel ? `Nivel ${p.nivel}` : null].filter(Boolean).join(' · ')}
+              {[p.especie, esJugable ? p.clase : null, esJugable && p.nivel ? `Nivel ${p.nivel}` : null].filter(Boolean).join(' · ')}
             </small>
           </div>
         </div>
 
         {puedeEditar && (
           <div className="d-flex gap-2">
-            <Link to={`/personajes/${p.id}/editar`} className="btn btn-outline-secondary btn-sm">Editar</Link>
+            <Link to={rutaEditar} className="btn btn-outline-secondary btn-sm">Editar</Link>
             <button onClick={eliminar} className="btn btn-outline-danger btn-sm">Eliminar</button>
           </div>
         )}
@@ -130,9 +134,9 @@ export function PersonajeDetalle() {
         </section>
       )}
 
-      {!esJugable && p.campana && (
+      {!esJugable && (
         <p className="mt-3">
-          Pertenece a la campaña <Link to={`/campanas/${p.campana.id}`}>{p.campana.nombre}</Link>.
+          Pertenece a la <Link to={volverA}>{p.campana.nombre}</Link>.
         </p>
       )}
       {dialogo}

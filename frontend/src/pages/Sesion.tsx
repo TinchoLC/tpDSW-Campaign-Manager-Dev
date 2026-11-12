@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import { campanaService, type Campana, type Participante } from '../services/campana.service';
 import { mapaService, type Mapa, type MapaConFichas } from '../services/mapa.service';
-import { personajeService, type Personaje } from '../services/personaje.service';
+import { npcCampanaService, type NpcCampana } from '../services/npc-campana.service';
 import { fichaService } from '../services/ficha.service';
 
 const REFRESCO_FICHAS_MS = 1000;
@@ -20,7 +20,7 @@ interface DatosSesion {
   mapas: Mapa[];
   mapa: MapaConFichas | null;
   participantes: Participante[];
-  npcs: Personaje[];
+  npcs: NpcCampana[];
 }
 
 async function cargarSesionCompleta(campanaId: number): Promise<DatosSesion> {
@@ -28,32 +28,13 @@ async function cargarSesionCompleta(campanaId: number): Promise<DatosSesion> {
     campanaService.obtener(campanaId),
     mapaService.deCampana(campanaId),
     campanaService.participantes(campanaId).catch(() => []),
-    campanaService.npcs(campanaId).catch(() => []),
+    npcCampanaService.listar(campanaId).catch(() => []),
   ]);
 
   const enJuego = mapas.find((m) => m.estado === 'en_juego');
   const mapa = enJuego ? await mapaService.conFichas(enJuego.id) : null;
 
-  // Si el jugador no puede listar todos los NPCs, cargar los que ya están en las fichas.
-  let npcs: Personaje[] = npcsCampana;
-
-  if (npcs.length === 0 && mapa?.fichas) {
-    const npcsIds = Array.from(
-      new Set(
-        mapa.fichas
-          .map((f) => f.personaje?.id)
-          .filter((id): id is number => id !== undefined)
-      )
-    );
-
-    const npcsRaw = await Promise.all(
-      npcsIds.map((npcId) => personajeService.obtener(npcId).catch(() => null))
-    );
-
-    npcs = npcsRaw.filter((n): n is NonNullable<typeof n> => n !== null);
-  }
-
-  return { campana, mapas, mapa, participantes, npcs };
+  return { campana, mapas, mapa, participantes, npcs: npcsCampana };
 }
 
 export function Sesion() {
@@ -72,7 +53,7 @@ export function Sesion() {
   const mapaActual = mapaVista === undefined ? data?.mapa ?? null : mapaVista;
   const mapaActualId = mapaActual?.id;
 
-  const [npcsActuales, setNpcsActuales] = useState<Personaje[]>([]);
+  const [npcsActuales, setNpcsActuales] = useState<NpcCampana[] | null>(null);
 
   // null hace que el master siga el mapa "en_juego".
   const [idMapaSeleccionado, setIdMapaSeleccionado] = useState<number | null>(null);
@@ -103,32 +84,7 @@ export function Sesion() {
         const mapaActualizado = await mapaService.conFichas(idAMostrar);
         setMapaVista(mapaActualizado);
 
-        try {
-          const npcsRefrescados = await campanaService.npcs(campanaId);
-
-          if (npcsRefrescados && npcsRefrescados.length > 0) {
-            setNpcsActuales(npcsRefrescados);
-          }
-        } catch {
-          // Los jugadores solo pueden cargar los NPCs que ya aparecen en el mapa.
-          const npcsIds = Array.from(
-            new Set(
-              (mapaActualizado.fichas ?? [])
-                .map((f) => f.personaje?.id)
-                .filter((id): id is number => id !== undefined)
-            )
-          );
-
-          if (npcsIds.length > 0) {
-            const npcsRefrescados = await Promise.all(
-              npcsIds.map((npcId) => personajeService.obtener(npcId).catch(() => null))
-            );
-
-            setNpcsActuales(
-              npcsRefrescados.filter((n): n is NonNullable<typeof n> => n !== null)
-            );
-          }
-        }
+        if (esMaster) setNpcsActuales(await npcCampanaService.listar(campanaId));
       } catch {
         // No se hace nada; el sondeo es solo para mantener la vista actualizada.
       }
@@ -159,7 +115,7 @@ export function Sesion() {
   }
 
   const { campana, mapas, participantes, npcs } = data;
-  const listaNpcs = npcsActuales.length > 0 ? npcsActuales : npcs;
+  const listaNpcs = npcsActuales ?? npcs;
   const mapa = mapaActual;
   const campanaFinalizada = campana.estado === 'finalizada';
 
@@ -220,7 +176,7 @@ export function Sesion() {
   };
 
   const handleColocarFicha = async (datos: {
-    personajeId?: number;
+    npcCampanaId?: number;
     personajeCampanaId?: number;
   }) => {
     if (!mapa) return;
@@ -277,7 +233,7 @@ export function Sesion() {
 
   const handleNpcActualizado = async () => {
   try {
-    const npcsActualizados = await campanaService.npcs(campanaId);
+    const npcsActualizados = await npcCampanaService.listar(campanaId);
     setNpcsActuales(npcsActualizados);
   } catch (err) {
     setErrorAccion(
@@ -422,7 +378,6 @@ export function Sesion() {
 
             <TableroMapa
               mapa={mapa}
-              npcs={listaNpcs}
               usuarioId={usuarioId}
               esMaster={esMaster}
               campanaFinalizada={campanaFinalizada}

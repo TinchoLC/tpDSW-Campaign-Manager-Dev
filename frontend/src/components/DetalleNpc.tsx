@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import {
-  personajeService,
-  type Personaje,
-  type PersonajeInput,
+  npcCampanaService,
+  type NpcCampana,
+  type NpcCampanaInput,
   type EstadoAgresion,
-} from '../services/personaje.service';
+} from '../services/npc-campana.service';
 import { ImageUpload } from './ImageUpload';
 import { rasgoService } from '../services/rasgo.service';
 import type { Rasgo } from '../services/rasgo.service';
 
 interface Props {
-  npc: Personaje;
+  npc: NpcCampana;
   editable: boolean;
   onActualizado: () => void;
 }
@@ -163,7 +163,7 @@ export function DetalleNpc({ npc, editable, onActualizado }: Props) {
               (rasgo) =>
                 rasgo.activo &&
                 (rasgo.nivelMinimo === null ||
-                  rasgo.nivelMinimo <= (npc.nivel ?? 1))
+                  rasgo.nivelMinimo <= (1))
             )
           );
         }
@@ -179,7 +179,7 @@ export function DetalleNpc({ npc, editable, onActualizado }: Props) {
     return () => {
       cancelado = true;
     };
-  }, [npc.id, npc.campanaId, npc.nivel]);
+  }, [npc.id, npc.campanaId]);
 
   const cambiarRasgo = (rasgoId: number, seleccionado: boolean) => {
     setSeleccionRasgos((actual) => {
@@ -203,7 +203,7 @@ export function DetalleNpc({ npc, editable, onActualizado }: Props) {
       setErrorRasgos(null);
       setRasgosGuardados(false);
 
-      await personajeService.actualizar(npc.id, {
+      await npcCampanaService.actualizar(npc.campanaId, npc.id, {
         rasgoIds: rasgoIdsSeleccionados,
       });
 
@@ -218,27 +218,27 @@ export function DetalleNpc({ npc, editable, onActualizado }: Props) {
     }
   };
 
-  const actualizar = async (datos: PersonajeInput) => {
-    await personajeService.actualizar(npc.id, datos);
+  const actualizar = async (datos: NpcCampanaInput) => {
+    await npcCampanaService.actualizar(npc.campanaId, npc.id, datos);
     onActualizado();
   };
 
   const campo = (
     label: string,
-    propiedad: keyof PersonajeInput,
+    propiedad: keyof NpcCampanaInput,
     min?: number,
     tipo: 'text' | 'number' = 'number'
   ) => (
     <CampoEditable
-      key={`${npc.id}-${propiedad}-${String(npc[propiedad as keyof Personaje] ?? '')}`}
+      key={`${npc.id}-${propiedad}-${String(npc[propiedad as keyof NpcCampana] ?? '')}`}
       label={label}
-      value={npc[propiedad as keyof Personaje] as string | number | null}
+      value={npc[propiedad as keyof NpcCampana] as string | number | null}
       editable={editable}
       tipo={tipo}
       min={min}
       nullable={propiedad !== 'nombre'}
       onGuardar={(value) =>
-        actualizar({ [propiedad]: value } as PersonajeInput)
+        actualizar({ [propiedad]: value } as NpcCampanaInput)
       }
     />
   );

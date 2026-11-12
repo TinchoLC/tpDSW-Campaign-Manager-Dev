@@ -34,16 +34,16 @@ export const fichaService = {
 
     assertDentroDeGrilla(mapa, data.posicionX, data.posicionY);
 
-    if (data.personajeId !== undefined) {
+    if (data.npcCampanaId !== undefined) {
       // NPC: solo lo coloca el master
       if (rol !== "master") {
         throw new ForbiddenError("Solo el master puede colocar NPCs");
       }
-      const npc = await fichaRepository.findNpc(data.personajeId, campana.id);
+      const npc = await fichaRepository.findNpc(data.npcCampanaId, campana.id);
       if (!npc) {
         throw new BadRequestError("El personaje indicado no es un NPC activo de esta campaña");
       }
-      if (await fichaRepository.findDuplicada(mapaId, { personajeId: data.personajeId })) {
+      if (await fichaRepository.findDuplicada(mapaId, { npcCampanaId: data.npcCampanaId })) {
         throw new ConflictError("Ese NPC ya tiene una ficha en este mapa");
       }
     } else if (data.personajeCampanaId !== undefined) {
@@ -63,7 +63,7 @@ export const fichaService = {
         throw new ConflictError("Ese personaje ya tiene una ficha en este mapa");
       }
     } else {
-      throw new BadRequestError("Debe indicarse personajeId o personajeCampanaId");
+      throw new BadRequestError("Debe indicarse npcCampanaId o personajeCampanaId");
     }
 
     return fichaRepository.create(mapaId, data);

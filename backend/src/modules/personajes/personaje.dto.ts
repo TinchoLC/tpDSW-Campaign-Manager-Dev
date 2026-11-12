@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { estadoAgresionEnum } from "../../lib/estadoAgresionEnum";
 
 const rasgoIdsSchema = z
   .array(z.number().int().positive())
@@ -9,7 +8,7 @@ const rasgoIdsSchema = z
   .optional();
 
 // Campos que comparten tanto Jugable como NoJugable
-const camposComunes = z.object({
+export const camposComunes = z.object({
   nombre: z.string().min(1).max(100),
   descripcion: z.string().max(500).optional(),
   especie: z.string().optional(),
@@ -27,7 +26,7 @@ const camposComunes = z.object({
   rasgoIds: rasgoIdsSchema,
 });
 
-const createJugableSchema = camposComunes.extend({
+export const createPersonajeSchema = camposComunes.extend({
   tipo: z.literal("jugable"),
   clase: z.string().optional(),
   nivel: z.number().int().positive().default(1),
@@ -36,28 +35,7 @@ const createJugableSchema = camposComunes.extend({
   oro: z.number().int().nonnegative().optional(),
 });
 
-const createNoJugableSchema = camposComunes.extend({
-  tipo: z.literal("no_jugable"),
-  estadoAgresion: estadoAgresionEnum.optional(),
-  campanaId: z.number().int().positive(), // obligatorio: los NPCs se crean directo en una campaña
-});
-
-// usuarioId NO va en ningún schema: sale del usuario autenticado, nunca del body
-
-export const createPersonajeSchema = z.discriminatedUnion("tipo", [
-  createJugableSchema,
-  createNoJugableSchema,
-]);
-
-// Para el update no se permite cambiar "tipo", así que no se puede reusar el discriminatedUnion
-export const updateJugableSchema = createJugableSchema.omit({ tipo: true }).partial();
-export const updateNoJugableSchema = createNoJugableSchema
-  .omit({ tipo: true })
-  .partial()
-  .extend({
-    vidaActual: z.number().int().nonnegative().nullable().optional(),
-  });
+export const updateJugableSchema = createPersonajeSchema.omit({ tipo: true }).partial();
 
 export type CreatePersonajeDTO = z.infer<typeof createPersonajeSchema>;
 export type UpdateJugableDTO = z.infer<typeof updateJugableSchema>;
-export type UpdateNoJugableDTO = z.infer<typeof updateNoJugableSchema>;

@@ -1,4 +1,4 @@
-import { prisma } from "../../lib/prisma";
+import { prisma } from "../../../lib/prisma";
 import { UpdatePersonajeCampanaDTO } from "./personaje-campana.dto";
 
 // Lo que ve cualquier participante de la campaña

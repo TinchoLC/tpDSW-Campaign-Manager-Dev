@@ -8,14 +8,14 @@ const idRefSchema = z.number().int().positive();
 export const createFichaSchema = z
   .object({
     // Exactamente uno de los dos:
-    personajeId: idRefSchema.optional(), // un NPC de la campaña
+    npcCampanaId: idRefSchema.optional(), // un NPC de la campaña
     personajeCampanaId: idRefSchema.optional(), // la instancia de un personaje jugable
     posicionX: coordenadaSchema,
     posicionY: coordenadaSchema,
     estado: z.string().max(50).optional(),
   })
-  .refine((d) => (d.personajeId !== undefined) !== (d.personajeCampanaId !== undefined), {
-    message: "Debe indicarse exactamente uno de personajeId o personajeCampanaId",
+  .refine((d) => (d.npcCampanaId !== undefined) !== (d.personajeCampanaId !== undefined), {
+    message: "Debe indicarse exactamente uno de npcCampanaId o personajeCampanaId",
   });
 
 // Mover una ficha: no se puede cambiar a qué personaje pertenece ni de mapa

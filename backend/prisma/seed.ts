@@ -8,6 +8,8 @@ async function main() {
 
   // Limpieza previa en orden para respetar claves foraneas
   await prisma.fichaMapa.deleteMany();
+  await prisma.npcCampanaObjeto.deleteMany();
+  await prisma.npcCampana.deleteMany();
   await prisma.personajeCampanaObjeto.deleteMany();
   await prisma.personajeObjeto.deleteMany();
   await prisma.personajeCampana.deleteMany();
@@ -147,162 +149,213 @@ async function main() {
 
   // 6. Personajes y NPCs
   console.log("Creando personajes y NPCs...");
-  await prisma.personaje.create({
-    data: {
-    "id": 1,
-    "tipo": "no_jugable",
-    "nombre": "Skullomania",
-    "descripcion": "Un esqueleto de pocas pulgas",
-    "especie": "Esqueleto",
-    "armadura": "2",
-    "iniciativa": 2,
-    "velocidad": 20,
-    "vidaMax": 2,
-    "vidaActual": null,
-    "activo": true,
-    "imagenUrl": "/uploads/test-images/skullomania.jpg",
-    "fuerza": 2,
-    "destreza": 2,
-    "constitucion": 2,
-    "inteligencia": 13,
-    "carisma": 2,
-    "sabiduria": 1,
-    "clase": null,
-    "nivel": 1,
-    "manaMax": null,
-    "experiencia": null,
-    "oro": null,
-    "estadoAgresion": "hostil",
-    "campanaId": 1,
-    "usuarioId": 2,
-    "rasgos": {
+  await prisma.$transaction([
+    prisma.personaje.create({ data: {
+      "id": 1,
+      "tipo": "no_jugable",
+      "nombre": "Skullomania",
+      "descripcion": "Un esqueleto de pocas pulgas",
+      "especie": "Esqueleto",
+      "armadura": "2",
+      "iniciativa": 2,
+      "velocidad": 20,
+      "vidaMax": 2,
+      "activo": true,
+      "imagenUrl": "/uploads/test-images/skullomania.jpg",
+      "fuerza": 2,
+      "destreza": 2,
+      "constitucion": 2,
+      "inteligencia": 13,
+      "carisma": 2,
+      "sabiduria": 1,
+      "clase": null,
+      "nivel": 1,
+      "manaMax": null,
+      "experiencia": null,
+      "oro": null,
+      "usuarioId": 2
+    } }),
+    prisma.npcCampana.create({ data: {
+      "id": 1,
+      "personajeId": 1,
+      "nombre": "Skullomania",
+      "descripcion": "Un esqueleto de pocas pulgas",
+      "especie": "Esqueleto",
+      "armadura": "2",
+      "iniciativa": 2,
+      "velocidad": 20,
+      "vidaMax": 2,
+      "imagenUrl": "/uploads/test-images/skullomania.jpg",
+      "fuerza": 2,
+      "destreza": 2,
+      "constitucion": 2,
+      "inteligencia": 13,
+      "carisma": 2,
+      "sabiduria": 1,
+      "vidaActual": null,
+      "estadoAgresion": "hostil",
+      "campanaId": 1,
+      "activo": true,
+      "rasgos": {
         "connect": [
-            {
-                "id": 2
-            }
+          {
+            "id": 2
+          }
         ]
-    }
-}
+      }
+    } }),
+  ]);
+  await prisma.$transaction([
+    prisma.personaje.create({ data: {
+      "id": 2,
+      "tipo": "no_jugable",
+      "nombre": "Tabernero Jorge",
+      "descripcion": "Un tabernero muy sabio",
+      "especie": "enano",
+      "armadura": "1",
+      "iniciativa": 1,
+      "velocidad": 1,
+      "vidaMax": 1,
+      "activo": true,
+      "imagenUrl": "/uploads/test-images/tabernero_jorge.jpg",
+      "fuerza": 1,
+      "destreza": 1,
+      "constitucion": 1,
+      "inteligencia": 1,
+      "carisma": 1,
+      "sabiduria": 1,
+      "clase": null,
+      "nivel": 1,
+      "manaMax": null,
+      "experiencia": null,
+      "oro": null,
+      "usuarioId": 2
+    } }),
+    prisma.npcCampana.create({ data: {
+      "id": 2,
+      "personajeId": 2,
+      "nombre": "Tabernero Jorge",
+      "descripcion": "Un tabernero muy sabio",
+      "especie": "enano",
+      "armadura": "1",
+      "iniciativa": 1,
+      "velocidad": 1,
+      "vidaMax": 1,
+      "imagenUrl": "/uploads/test-images/tabernero_jorge.jpg",
+      "fuerza": 1,
+      "destreza": 1,
+      "constitucion": 1,
+      "inteligencia": 1,
+      "carisma": 1,
+      "sabiduria": 1,
+      "vidaActual": null,
+      "estadoAgresion": "amistoso",
+      "campanaId": 1,
+      "activo": true
+    } }),
+  ]);
+  await prisma.$transaction([
+    prisma.personaje.create({ data: {
+      "id": 3,
+      "tipo": "no_jugable",
+      "nombre": "George \"El empresario\"",
+      "descripcion": "Es un goblin empresarial",
+      "especie": "Goblin",
+      "armadura": "1",
+      "iniciativa": 1,
+      "velocidad": 1,
+      "vidaMax": 1,
+      "activo": true,
+      "imagenUrl": "/uploads/test-images/george_empresario.jpg",
+      "fuerza": 1,
+      "destreza": 1,
+      "constitucion": 1,
+      "inteligencia": 1,
+      "carisma": 1,
+      "sabiduria": 1,
+      "clase": null,
+      "nivel": 1,
+      "manaMax": null,
+      "experiencia": null,
+      "oro": null,
+      "usuarioId": 2
+    } }),
+    prisma.npcCampana.create({ data: {
+      "id": 3,
+      "personajeId": 3,
+      "nombre": "George \"El empresario\"",
+      "descripcion": "Es un goblin empresarial",
+      "especie": "Goblin",
+      "armadura": "1",
+      "iniciativa": 1,
+      "velocidad": 1,
+      "vidaMax": 1,
+      "imagenUrl": "/uploads/test-images/george_empresario.jpg",
+      "fuerza": 1,
+      "destreza": 1,
+      "constitucion": 1,
+      "inteligencia": 1,
+      "carisma": 1,
+      "sabiduria": 1,
+      "vidaActual": null,
+      "estadoAgresion": "neutral",
+      "campanaId": 1,
+      "activo": true
+    } }),
+  ]);
+  await prisma.personaje.create({
+    data: {
+      "id": 4,
+      "tipo": "jugable",
+      "nombre": "Maguisimo Tom",
+      "descripcion": "Le falta un ojo",
+      "especie": "Humano",
+      "armadura": "2",
+      "iniciativa": 2,
+      "velocidad": 2,
+      "vidaMax": 50,
+      "activo": true,
+      "imagenUrl": "/uploads/test-images/maguisimo_tom.jpg",
+      "fuerza": 2,
+      "destreza": 2,
+      "constitucion": 2,
+      "inteligencia": 2,
+      "carisma": 2,
+      "sabiduria": 2,
+      "clase": "1",
+      "nivel": 20,
+      "manaMax": 50,
+      "experiencia": 2,
+      "oro": 2,
+      "usuarioId": 3
+    },
   });
   await prisma.personaje.create({
     data: {
-    "id": 2,
-    "tipo": "no_jugable",
-    "nombre": "Tabernero Jorge",
-    "descripcion": "Un tabernero muy sabio",
-    "especie": "enano",
-    "armadura": "1",
-    "iniciativa": 1,
-    "velocidad": 1,
-    "vidaMax": 1,
-    "vidaActual": null,
-    "activo": true,
-    "imagenUrl": "/uploads/test-images/tabernero_jorge.jpg",
-    "fuerza": 1,
-    "destreza": 1,
-    "constitucion": 1,
-    "inteligencia": 1,
-    "carisma": 1,
-    "sabiduria": 1,
-    "clase": null,
-    "nivel": 1,
-    "manaMax": null,
-    "experiencia": null,
-    "oro": null,
-    "estadoAgresion": "amistoso",
-    "campanaId": 1,
-    "usuarioId": 2
-}
-  });
-  await prisma.personaje.create({
-    data: {
-    "id": 3,
-    "tipo": "no_jugable",
-    "nombre": "George \"El empresario\"",
-    "descripcion": "Es un goblin empresarial",
-    "especie": "Goblin",
-    "armadura": "1",
-    "iniciativa": 1,
-    "velocidad": 1,
-    "vidaMax": 1,
-    "vidaActual": null,
-    "activo": true,
-    "imagenUrl": "/uploads/test-images/george_empresario.jpg",
-    "fuerza": 1,
-    "destreza": 1,
-    "constitucion": 1,
-    "inteligencia": 1,
-    "carisma": 1,
-    "sabiduria": 1,
-    "clase": null,
-    "nivel": 1,
-    "manaMax": null,
-    "experiencia": null,
-    "oro": null,
-    "estadoAgresion": "neutral",
-    "campanaId": 1,
-    "usuarioId": 2
-}
-  });
-  await prisma.personaje.create({
-    data: {
-    "id": 4,
-    "tipo": "jugable",
-    "nombre": "Maguisimo Tom",
-    "descripcion": "Le falta un ojo",
-    "especie": "Humano",
-    "armadura": "2",
-    "iniciativa": 2,
-    "velocidad": 2,
-    "vidaMax": 50,
-    "vidaActual": null,
-    "activo": true,
-    "imagenUrl": "/uploads/test-images/maguisimo_tom.jpg",
-    "fuerza": 2,
-    "destreza": 2,
-    "constitucion": 2,
-    "inteligencia": 2,
-    "carisma": 2,
-    "sabiduria": 2,
-    "clase": "1",
-    "nivel": 20,
-    "manaMax": 50,
-    "experiencia": 2,
-    "oro": 2,
-    "estadoAgresion": null,
-    "campanaId": null,
-    "usuarioId": 3
-}
-  });
-  await prisma.personaje.create({
-    data: {
-    "id": 5,
-    "tipo": "jugable",
-    "nombre": "Sara la poderosa",
-    "descripcion": "Chica muy poderosa",
-    "especie": "Humana?",
-    "armadura": "1",
-    "iniciativa": 1,
-    "velocidad": 1,
-    "vidaMax": 1,
-    "vidaActual": null,
-    "activo": true,
-    "imagenUrl": "/uploads/test-images/sara_poderosa.jpg",
-    "fuerza": 1,
-    "destreza": 1,
-    "constitucion": 1,
-    "inteligencia": 1,
-    "carisma": 1,
-    "sabiduria": 1,
-    "clase": "q",
-    "nivel": 1,
-    "manaMax": 1,
-    "experiencia": 1,
-    "oro": 1,
-    "estadoAgresion": null,
-    "campanaId": null,
-    "usuarioId": 4
-}
+      "id": 5,
+      "tipo": "jugable",
+      "nombre": "Sara la poderosa",
+      "descripcion": "Chica muy poderosa",
+      "especie": "Humana?",
+      "armadura": "1",
+      "iniciativa": 1,
+      "velocidad": 1,
+      "vidaMax": 1,
+      "activo": true,
+      "imagenUrl": "/uploads/test-images/sara_poderosa.jpg",
+      "fuerza": 1,
+      "destreza": 1,
+      "constitucion": 1,
+      "inteligencia": 1,
+      "carisma": 1,
+      "sabiduria": 1,
+      "clase": "q",
+      "nivel": 1,
+      "manaMax": 1,
+      "experiencia": 1,
+      "oro": 1,
+      "usuarioId": 4
+    },
   });
 
   // 7. Participantes (PersonajeCampana)
@@ -378,7 +431,7 @@ async function main() {
     "posicionY": 4,
     "estado": null,
     "mapaId": 2,
-    "personajeId": 1,
+    "npcCampanaId": 1,
     "personajeCampanaId": null
 }
   });
@@ -389,7 +442,7 @@ async function main() {
     "posicionY": 2,
     "estado": null,
     "mapaId": 1,
-    "personajeId": 3,
+    "npcCampanaId": 3,
     "personajeCampanaId": null
 }
   });
@@ -400,7 +453,7 @@ async function main() {
     "posicionY": 4,
     "estado": null,
     "mapaId": 1,
-    "personajeId": null,
+    "npcCampanaId": null,
     "personajeCampanaId": 2
 }
   });
@@ -411,7 +464,7 @@ async function main() {
     "posicionY": 4,
     "estado": null,
     "mapaId": 1,
-    "personajeId": null,
+    "npcCampanaId": null,
     "personajeCampanaId": 1
 }
   });
@@ -422,7 +475,7 @@ async function main() {
     "posicionY": 0,
     "estado": null,
     "mapaId": 1,
-    "personajeId": 2,
+    "npcCampanaId": 2,
     "personajeCampanaId": null
 }
   });

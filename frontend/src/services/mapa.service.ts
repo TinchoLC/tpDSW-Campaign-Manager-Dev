@@ -14,13 +14,13 @@ export interface Mapa {
   campanaId: number;
 }
 
-// Posición de un personaje en la grilla: o es un NPC (personaje) o un jugador (personajeCampana)
+// Posición de un personaje en la grilla: o es un NPC (npcCampana) o un jugador (personajeCampana)
 export interface Ficha {
   id: number;
   posicionX: number;
   posicionY: number;
   estado: string | null;
-  personaje: { id: number; nombre: string; imagenUrl: string | null; estadoAgresion: string | null } | null;
+  npcCampana: { id: number; nombre: string; imagenUrl: string | null; estadoAgresion: string | null } | null;
   personajeCampana: {
     id: number;
     nombre: string;

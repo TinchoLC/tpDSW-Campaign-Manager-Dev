@@ -25,21 +25,21 @@ export function colorDeFicha(nombre: string): string {
   return COLORES_FICHA[hash % COLORES_FICHA.length];
 }
 
-// Una ficha es de un jugador (personajeCampana) o de un NPC (personaje)
+// Una ficha es de un jugador (personajeCampana) o de un NPC (npcCampana)
 export function nombreDeFicha(ficha: Ficha): string {
-  return (ficha.personajeCampana ? ficha.personajeCampana.nombre : ficha.personaje!.nombre);
+  return (ficha.personajeCampana ? ficha.personajeCampana.nombre : ficha.npcCampana!.nombre);
 }
 
 export function imagenDeFicha(ficha: Ficha): string | null {
   const url = ficha.personajeCampana
     ? ficha.personajeCampana.personaje.imagenUrl
-    : ficha.personaje!.imagenUrl;
+    : ficha.npcCampana!.imagenUrl;
 
   return resolveAssetUrl(url);
 }
 
 export function esNpc(ficha: Ficha): boolean {
-  return ficha.personajeCampana === null;
+  return ficha.npcCampana !== null;
 }
 
 export function esFichaDelUsuario(ficha: Ficha, usuarioId: number): boolean {
@@ -66,7 +66,7 @@ export function colorBordeFicha(ficha: Ficha, usuarioId: number): string {
     return '#0d6efd'; 
   }
 
-  const agresion = ficha.personaje?.estadoAgresion?.toLowerCase() 
+  const agresion = ficha.npcCampana?.estadoAgresion?.toLowerCase();
 
   if (agresion === 'hostil') {
     return '#dc3545'; 

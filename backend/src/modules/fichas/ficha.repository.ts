@@ -3,7 +3,7 @@ import { UpdateFichaDTO } from "./ficha.dto";
 import { campanaAccesoSelect } from "../../lib/campana-acceso";
 
 export const fichaInclude = {
-  personaje: { select: { id: true, nombre: true, imagenUrl: true, estadoAgresion: true } }, // npc
+  npcCampana: { select: { id: true, nombre: true, imagenUrl: true, estadoAgresion: true } },
   personajeCampana: {
     select: {
       id: true,
@@ -25,8 +25,8 @@ export const fichaRepository = {
 
   // Un NPC de ESA campaña (los personajes jugables entran al mapa por su instancia)
   findNpc(id: number, campanaId: number) {
-    return prisma.personaje.findFirst({
-      where: { id, campanaId, tipo: "no_jugable", activo: true },
+    return prisma.npcCampana.findFirst({
+      where: { id, campanaId, activo: true },
       select: { id: true },
     });
   },
@@ -41,7 +41,7 @@ export const fichaRepository = {
 
   findDuplicada(
     mapaId: number,
-    ref: { personajeId: number } | { personajeCampanaId: number }
+    ref: { npcCampanaId: number } | { personajeCampanaId: number }
   ) {
     return prisma.fichaMapa.findFirst({ where: { mapaId, ...ref }, select: { id: true } });
   },
@@ -52,7 +52,7 @@ export const fichaRepository = {
       posicionX: number;
       posicionY: number;
       estado?: string;
-      personajeId?: number;
+      npcCampanaId?: number;
       personajeCampanaId?: number;
     }
   ) {

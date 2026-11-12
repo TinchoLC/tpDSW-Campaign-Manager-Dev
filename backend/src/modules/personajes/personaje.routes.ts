@@ -10,7 +10,7 @@ router.use(authMiddleware); // todas requieren estar logueado
  * @swagger
  * /personajes:
  *   post:
- *     summary: Crear un personaje (jugable o NPC)
+ *     summary: Crear un personaje jugable
  *     tags: [Personajes]
  *     requestBody:
  *       required: true
@@ -21,7 +21,7 @@ router.use(authMiddleware); // todas requieren estar logueado
  *             properties:
  *               tipo:
  *                 type: string
- *                 enum: [jugable, no_jugable]
+ *                 enum: [jugable]
  *               nombre:
  *                 type: string
  *     responses:

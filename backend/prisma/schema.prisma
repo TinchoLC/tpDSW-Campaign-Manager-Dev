@@ -49,7 +49,7 @@ model Campana {
   master    Usuario @relation("CampanasCreadas", fields: [usuarioId], references: [id])
   usuarioId Int
 
-  npcs      Personaje[] // NPCs pertenecientes a esta campaña (tipo=no_jugable)
+  npcs      NpcCampana[]
   jugadores PersonajeCampana[] // instancias de PJs participantes
   mapas     Mapa[]
   objetos   Objeto[] // objetos específicos de esta campaña
@@ -91,21 +91,21 @@ model FichaMapa {
   mapaId Int
 
   // Exactamente uno de los dos debe estar seteado (se valida en el service, no en la DB)
-  personaje          Personaje?        @relation(fields: [personajeId], references: [id])
-  personajeId        Int?
+  npcCampana         NpcCampana?       @relation(fields: [npcCampanaId], references: [id])
+  npcCampanaId       Int?
   personajeCampana   PersonajeCampana? @relation(fields: [personajeCampanaId], references: [id])
   personajeCampanaId Int?
 
   // Un mismo personaje no puede tener dos fichas en el mismo mapa
-  @@unique([mapaId, personajeId])
+  @@unique([mapaId, npcCampanaId])
   @@unique([mapaId, personajeCampanaId])
 }
 
-// ===================== PERSONAJE (tabla única con discriminador) =====================
+// ===================== PLANTILLA DE PERSONAJE =====================
 
 model Personaje {
   id          Int           @id @default(autoincrement())
-  tipo        TipoPersonaje
+  tipo        TipoPersonaje // Clasifica la plantilla para los flujos de creación y selección
   nombre      String
   descripcion String?
   especie     String?
@@ -113,7 +113,6 @@ model Personaje {
   iniciativa  Int?
   velocidad   Int?
   vidaMax     Int?
-  vidaActual  Int?
   activo      Boolean       @default(true) // baja lógica
   imagenUrl   String?
 
@@ -131,11 +130,6 @@ model Personaje {
   experiencia Int?
   oro         Int?
 
-  // --- Solo aplica si tipo = no_jugable ---
-  estadoAgresion String?
-  campana        Campana? @relation(fields: [campanaId], references: [id])
-  campanaId      Int? // obligatorio a nivel de negocio cuando tipo=no_jugable
-
   usuario   Usuario @relation(fields: [usuarioId], references: [id])
   usuarioId Int
 
@@ -144,7 +138,37 @@ model Personaje {
   rasgos   Rasgo[]
 
   instancias PersonajeCampana[] // solo se crean si tipo = jugable
-  fichasMapa FichaMapa[] // posición directa en mapa
+  npcsCampana NpcCampana[]
+}
+
+model NpcCampana {
+  id            Int @id @default(autoincrement())
+  nombre        String
+  descripcion   String?
+  especie       String?
+  armadura      String?
+  iniciativa    Int?
+  velocidad     Int?
+  vidaMax       Int?
+  imagenUrl     String?
+  fuerza        Int?
+  destreza      Int?
+  constitucion  Int?
+  inteligencia  Int?
+  carisma       Int?
+  sabiduria     Int?
+  vidaActual    Int?
+  estadoAgresion String?
+  activo        Boolean @default(true)
+  campanaId     Int
+
+  personajeId Int
+  personaje Personaje @relation(fields: [personajeId], references: [id])
+  campana   Campana   @relation(fields: [campanaId], references: [id])
+  objetos   NpcCampanaObjeto[]
+  acciones  Accion[]
+  rasgos    Rasgo[]
+  fichasMapa FichaMapa[]
 }
 
 // ===================== PERSONAJE_CAMPANA =====================
@@ -220,6 +244,7 @@ model Objeto {
 
   personajes        PersonajeObjeto[]
   personajesCampana PersonajeCampanaObjeto[]
+  npcsCampana       NpcCampanaObjeto[]
 }
 
 // Clases asociativas (Personaje/PersonajeCampana <-> Objeto) con el atributo "cantidad"
@@ -243,6 +268,16 @@ model PersonajeCampanaObjeto {
   @@id([personajeCampanaId, objetoId])
 }
 
+model NpcCampanaObjeto {
+  npcCampana   NpcCampana @relation(fields: [npcCampanaId], references: [id])
+  npcCampanaId Int
+  objeto       Objeto @relation(fields: [objetoId], references: [id])
+  objetoId     Int
+  cantidad     Int @default(1)
+
+  @@id([npcCampanaId, objetoId])
+}
+
 // ===================== RASGO / ACCIÓN =====================
 
 model Rasgo {
@@ -258,6 +293,7 @@ model Rasgo {
 
   personajes        Personaje[]
   personajesCampana PersonajeCampana[]
+  npcsCampana       NpcCampana[]
 }
 
 model Accion {
@@ -273,4 +309,5 @@ model Accion {
 
   personajes        Personaje[]
   personajesCampana PersonajeCampana[]
+  npcsCampana       NpcCampana[]
 }

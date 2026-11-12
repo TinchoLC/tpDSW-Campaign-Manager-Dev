@@ -4,7 +4,7 @@ import type { Ficha } from './mapa.service';
 export interface ColocarFichaDTO {
   posicionX: number;
   posicionY: number;
-  personajeId?: number;          // Se envía si es un NPC
+  npcCampanaId?: number;          // Se envía si es un NPC
   personajeCampanaId?: number;   // Se envía si es un personaje jugable
 }
 

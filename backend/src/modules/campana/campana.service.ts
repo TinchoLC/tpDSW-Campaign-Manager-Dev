@@ -4,7 +4,6 @@ import { prisma } from "../../lib/prisma";
 import { Prisma } from "../../generated/prisma/client";
 import { ForbiddenError, NotFoundError, ConflictError, BadRequestError } from "../../lib/errors";
 import { darDeBajaCampanas } from "../../lib/baja-logica";
-import { personajeRepository } from "../personajes/personaje.repository";
 
 // planificada → activa → pausada ⇄ activa → finalizada
 const TRANSICIONES_VALIDAS: Record<EstadoCampanaDTO, EstadoCampanaDTO[]> = {
@@ -48,18 +47,6 @@ export const campanaService = {
     return campana;
   },
 
-  // Solo el master ve los NPCs de su campaña
-  async getNpcs(campanaId: number, usuarioId: number, estadoAgresion?: string) {
-    const campana = await campanaRepository.findParaAcceso(campanaId);
-    if (!campana) throw new NotFoundError("Campaña no encontrada");
-
-    if (campana.usuarioId !== usuarioId) {
-      throw new ForbiddenError("Solo el master puede ver los NPCs de la campaña");
-    }
-
-    return personajeRepository.findNpcsByCampana(campanaId, estadoAgresion);
-  },
-
   async update(id: number, data: UpdateCampanaDTO, usuarioId: number) {
     const campana = await campanaRepository.findById(id);
     if (!campana) throw new NotFoundError("Campaña no encontrada");
@@ -83,7 +70,7 @@ export const campanaService = {
 
     // Baja lógica en cascada, todo dentro de una transacción:
     // - la propia campaña
-    // - los NPCs (Personaje tipo=no_jugable) asociados
+    // - los NPCs asociados
     // - los objetos específicos de la campaña que NO tengan ningún
     //   PersonajeCampana asociado (si lo tienen, se conservan)
     return prisma.$transaction((tx: Prisma.TransactionClient) =>

@@ -6,7 +6,9 @@ import uploadRoutes from "../modules/upload/upload.routes";
 import fichaRoutes, { fichasDeMapaRoutes } from "../modules/fichas/ficha.routes";
 import mapaRoutes, { mapasDeCampanaRoutes } from "../modules/mapas/mapa.routes";
 import rasgoRoutes from "../modules/rasgos/rasgo.routes";
-import participantesRoutes from "../modules/personajes-campana/personaje-campana.routes";
+import participantesRoutes from "../modules/personajes/personaje-campana/personaje-campana.routes";
+
+import npcCampanaRoutes from "../modules/personajes/npc-campana/npc-campana.routes";
 
 const router = Router(); // Creamos una instancia del Router para definir nuestras rutas principales de la aplicación
 
@@ -16,6 +18,7 @@ router.use("/personajes", personajeRoutes);
 // Rutas anidadas: van antes que el router base de su recurso padre
 router.use("/campanas/:campanaId/mapas", mapasDeCampanaRoutes);
 router.use("/campanas/:campanaId/participantes", participantesRoutes);
+router.use("/campanas/:campanaId/npcs", npcCampanaRoutes);
 router.use("/campanas", campanaRoutes);
 
 router.use("/mapas/:mapaId/fichas", fichasDeMapaRoutes);

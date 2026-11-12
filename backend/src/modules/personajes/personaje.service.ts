@@ -1,153 +1,53 @@
 import { personajeRepository } from "./personaje.repository";
-import { CreatePersonajeDTO, UpdateJugableDTO, UpdateNoJugableDTO } from "./personaje.dto";
+import { CreatePersonajeDTO, UpdateJugableDTO } from "./personaje.dto";
 import { prisma } from "../../lib/prisma";
-import { Prisma } from "../../generated/prisma/client";
 import { darDeBajaPersonajes } from "../../lib/baja-logica";
-import { campanaAccesoSelect, assertCampanaEscribible } from "../../lib/campana-acceso";
-import { ForbiddenError, NotFoundError, BadRequestError } from "../../lib/errors";
+import { BadRequestError, ForbiddenError, NotFoundError } from "../../lib/errors";
 
-
-async function assertCanModify(
-  personaje: { tipo: string; usuarioId: number; campanaId: number | null },
-  usuarioId: number
-) {
-  if (personaje.tipo === "jugable") {
-    if (personaje.usuarioId !== usuarioId) {
-      throw new ForbiddenError("Solo el creador puede modificar este personaje");
-    }
-    return;
-  }
-
-  const campana = await prisma.campana.findUnique({ where: { id: personaje.campanaId! } });
-  if (!campana || campana.usuarioId !== usuarioId) {
-    throw new ForbiddenError("Solo el DM de la campaña puede modificar este NPC");
-  }
-}
-
-async function validarRasgosPersonaje(
-  rasgoIds: number[] | undefined,
-  tipo: "jugable" | "no_jugable",
-  campanaId: number | null,
-  nivel: number
-) {
-  if (rasgoIds === undefined || rasgoIds.length === 0) return;
-
-  const rasgos = await prisma.rasgo.findMany({
+async function validarRasgos(rasgoIds: number[] | undefined, nivel: number) {
+  if (!rasgoIds?.length) return;
+  const cantidad = await prisma.rasgo.count({
     where: {
       id: { in: rasgoIds },
       activo: true,
-      AND: [
-        {
-          OR:
-            tipo === "jugable"
-              ? [{ campanaId: null }]
-              : [{ campanaId: null }, { campanaId }],
-        },
-        {
-          OR: [
-            { nivelMinimo: null },
-            { nivelMinimo: { lte: nivel } },
-          ],
-        },
-      ],
+      campanaId: null,
+      OR: [{ nivelMinimo: null }, { nivelMinimo: { lte: nivel } }],
     },
-    select: { id: true },
   });
-
-  if (rasgos.length !== rasgoIds.length) {
-    throw new BadRequestError(
-      "Uno o más rasgos no existen, no están disponibles para este personaje o requieren un nivel superior"
-    );
+  if (cantidad !== rasgoIds.length) {
+    throw new BadRequestError("Uno o más rasgos no están disponibles para este personaje");
   }
+}
+
+async function getOneVisible(id: number, usuarioId: number) {
+  const personaje = await personajeRepository.findById(id);
+  if (!personaje) throw new NotFoundError("Personaje no encontrado");
+  if (personaje.usuarioId !== usuarioId) {
+    throw new ForbiddenError("Solo el creador puede acceder a este personaje");
+  }
+  return personaje;
 }
 
 export const personajeService = {
   async create(data: CreatePersonajeDTO, usuarioId: number) {
-    // Un NPC solo lo puede crear el master de la campaña, y en una campaña vigente
-    if (data.tipo === "no_jugable") {
-      const campana = await prisma.campana.findUnique({
-        where: { id: data.campanaId },
-        select: campanaAccesoSelect,
-      });
-      if (!campana) throw new NotFoundError("La campaña indicada no existe");
-      if (campana.usuarioId !== usuarioId) {
-        throw new ForbiddenError("Solo el master de la campaña puede crear NPCs en ella");
-      }
-      assertCampanaEscribible(campana);
-    }
-    await validarRasgosPersonaje(
-      data.rasgoIds,
-      data.tipo,
-      data.tipo === "no_jugable" ? data.campanaId : null,
-      data.tipo === "jugable" ? data.nivel : 1
-    );    
+    await validarRasgos(data.rasgoIds, data.nivel);
     return personajeRepository.create(data, usuarioId);
   },
 
-  async update(id: number, data: UpdateJugableDTO | UpdateNoJugableDTO, usuarioId: number) {
-    const personaje = await personajeRepository.findById(id);
-    if (!personaje) throw new NotFoundError("Personaje no encontrado");
-
-    await assertCanModify(personaje, usuarioId);
-
-    if (personaje.tipo === "no_jugable") {
-      const campana = await prisma.campana.findUnique({
-        where: { id: personaje.campanaId! },
-        select: campanaAccesoSelect,
-      });
-
-      if (!campana) throw new NotFoundError("La campaña no existe");
-
-      assertCampanaEscribible(campana);
-    }
-    await validarRasgosPersonaje(
-      data.rasgoIds,
-      personaje.tipo as "jugable" | "no_jugable",
-      personaje.campanaId,
-      personaje.tipo === "jugable"
-        ? (("nivel" in data ? data.nivel : undefined) ?? personaje.nivel ?? 1)
-        : 1
-    );    
+  async update(id: number, data: UpdateJugableDTO, usuarioId: number) {
+    const personaje = await getOneVisible(id, usuarioId);
+    await validarRasgos(data.rasgoIds, data.nivel ?? personaje.nivel ?? 1);
     return personajeRepository.update(id, data);
   },
 
-  async getOne(id: number) {
-    const personaje = await personajeRepository.findById(id);
-    if (!personaje) throw new NotFoundError("Personaje no encontrado");
-    return personaje;
-  },
+  getOneVisible,
 
   getMisPersonajes(usuarioId: number) {
-    return personajeRepository.findByUsuario(usuarioId, "jugable");
-  },
-
-  async getOneVisible(id: number, usuarioId: number) {
-    const personaje = await personajeRepository.findById(id);
-    if (!personaje) throw new NotFoundError("Personaje no encontrado");
-
-    if (personaje.tipo === "jugable") {
-      // La plantilla la ve solo su creador
-      if (personaje.usuarioId !== usuarioId) {
-        throw new ForbiddenError("Solo el creador puede ver este personaje");
-      }
-      return personaje;
-    }
-    // NPC: solo el master de su campaña
-    if (personaje.campana?.usuarioId !== usuarioId) {
-      throw new ForbiddenError("Solo el master de la campaña puede ver este NPC");
-    }
-    return personaje;
+    return personajeRepository.findByUsuario(usuarioId);
   },
 
   async delete(id: number, usuarioId: number) {
-    const personaje = await personajeRepository.findById(id);
-    if (!personaje) throw new NotFoundError("Personaje no encontrado");
-
-    await assertCanModify(personaje, usuarioId);
-
-    return prisma.$transaction((tx: Prisma.TransactionClient) =>
-      darDeBajaPersonajes(tx, { id })
-    )
+    await getOneVisible(id, usuarioId);
+    return prisma.$transaction((tx) => darDeBajaPersonajes(tx, { id }));
   },
-
 };

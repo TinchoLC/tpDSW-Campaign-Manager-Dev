@@ -4,19 +4,20 @@ import type { Participante } from '../services/campana.service';
 import { personajeService, type Personaje } from '../services/personaje.service';
 import { colorDeFicha, esFichaDelUsuario, esNpc, estaCaida, imagenDeFicha, nombreDeFicha } from '../utils/ficha';
 import { DetalleParticipante } from './DetalleParticipante';
+import type { NpcCampana } from '../services/npc-campana.service';
 import { DetalleNpc } from './DetalleNpc';
 
 interface PanelSesionProps {
   fichas: Ficha[];
   participantes: Participante[];
-  npcs: Personaje[];
+  npcs: NpcCampana[];
   usuarioId: number;
   campanaId: number;
   esMaster: boolean;
   campanaFinalizada: boolean;
   fichaSeleccionadaId: number | null;
   onSeleccionarFicha: (id: number | null) => void;
-  onColocarFicha: (datos: { personajeId?: number; personajeCampanaId?: number }) => void;
+  onColocarFicha: (datos: { npcCampanaId?: number; personajeCampanaId?: number }) => void;
   onEliminarFicha?: (id: number) => void;
   onParticipanteActualizado: () => void;
   onNpcActualizado: () => void;
@@ -83,8 +84,8 @@ const detalleActual =
     ? personajeJugableDetalle.detalle
     : null;
 
-  const npcInfo = fichaSeleccionada?.personaje
-    ? npcs.find((n) => n.id === fichaSeleccionada.personaje?.id)
+  const npcInfo = fichaSeleccionada?.npcCampana
+    ? npcs.find((n) => n.id === fichaSeleccionada.npcCampana?.id)
     : null;
 
   // Filtrar los que NO están en el mapa todavía
@@ -93,7 +94,7 @@ const detalleActual =
   );
 
   const npcsDisponibles = esMaster
-    ? npcs.filter((n) => !fichas.some((f) => f.personaje?.id === n.id))
+    ? npcs.filter((n) => !fichas.some((f) => f.npcCampana?.id === n.id))
     : [];
 
   return (
@@ -291,7 +292,7 @@ const detalleActual =
                         <button
                           key={n.id}
                           className="btn btn-sm btn-outline-warning text-dark text-start"
-                          onClick={() => onColocarFicha({ personajeId: n.id })}
+                          onClick={() => onColocarFicha({ npcCampanaId: n.id })}
                           title="Hacé clic para colocar en el mapa"
                         >
                           + {n.nombre}

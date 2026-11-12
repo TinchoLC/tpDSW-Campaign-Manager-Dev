@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { resolveAssetUrl } from '../services/api';
 import type { Ficha, MapaConFichas } from '../services/mapa.service';
-import type { Personaje } from '../services/personaje.service';
 import { colorBordeFicha, colorDeFicha, esFichaDelUsuario, estaCaida, imagenDeFicha, nombreDeFicha } from '../utils/ficha';
 
 interface TokenProps {
@@ -90,7 +89,6 @@ function Token({
 
 interface TableroMapaProps {
   mapa: MapaConFichas;
-  npcs: Personaje[];
   usuarioId: number;
   esMaster: boolean;
   campanaFinalizada: boolean;
@@ -101,7 +99,6 @@ interface TableroMapaProps {
 
 export function TableroMapa({
   mapa,
-  npcs,
   usuarioId,
   esMaster,
   campanaFinalizada,

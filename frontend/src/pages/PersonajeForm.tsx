@@ -7,12 +7,10 @@ import { useAuth } from '../hooks/useAuth';
 import { useApi } from '../hooks/useApi';
 import {
   personajeService,
-  type EstadoAgresion,
   type Personaje,
-  type PersonajeDetalle,
   type PersonajeInput,
-  type TipoPersonaje,
 } from '../services/personaje.service';
+import { npcCampanaService, type NpcCampana, type NpcCampanaInput, type EstadoAgresion } from '../services/npc-campana.service';
 import { mensajeError, num, txt } from '../utils/form';
 import { ImageUpload } from '../components/ImageUpload';
 
@@ -26,19 +24,19 @@ const ESTADISTICAS = [
 ] as const;
 
 interface FormularioProps {
-  tipo: TipoPersonaje;
-  campanaId?: number; // solo al crear un NPC
-  inicial?: Personaje; // si viene, se edita
+  campanaId?: number;
+  inicial?: Personaje | NpcCampana;
 }
 
-function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
+function Formulario({ campanaId, inicial }: FormularioProps) {
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [imagenUrl, setImagenUrl] = useState<string | null>(inicial?.imagenUrl ?? null);
   const navigate = useNavigate();
 
+  const plantilla = inicial && "tipo" in inicial ? inicial : undefined;
   const esEdicion = inicial !== undefined;
-  const esJugable = tipo === 'jugable';
+  const esJugable = campanaId === undefined;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,7 +48,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
     const texto = (campo: string) =>
       esEdicion ? String(fd.get(campo) ?? '').trim() : txt(fd, campo);
 
-    const datos: PersonajeInput = {
+    const datos: PersonajeInput & NpcCampanaInput = {
       nombre: String(fd.get('nombre') || '').trim(),
       descripcion: texto('descripcion'),
       especie: texto('especie'),
@@ -82,19 +80,22 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
       datos.estadoAgresion = txt(fd, 'estadoAgresion') as EstadoAgresion | undefined;
     }
 
-    // El tipo y la campaña solo se definen al crear
-    if (!esEdicion) {
-      datos.tipo = tipo;
-      if (!esJugable) datos.campanaId = campanaId;
-    }
-
     setGuardando(true);
     try {
-      const personaje = esEdicion
-        ? await personajeService.actualizar(inicial.id, datos)
-        : await personajeService.crear(datos);
-
-      navigate(!esEdicion && !esJugable ? `/campanas/${campanaId}` : `/personajes/${personaje.id}`);
+      if (campanaId !== undefined) {
+        if (inicial) {
+          await npcCampanaService.actualizar(campanaId, inicial.id, datos);
+          navigate(`/campanas/${campanaId}/npcs/${inicial.id}`);
+        } else {
+          await npcCampanaService.crear(campanaId, datos);
+          navigate(`/campanas/${campanaId}`);
+        }
+      } else {
+        const personaje = inicial
+          ? await personajeService.actualizar(inicial.id, datos)
+          : await personajeService.crear({ ...datos, tipo: 'jugable' });
+        navigate(`/personajes/${personaje.id}`);
+      }
     } catch (err) {
       setError(mensajeError(err));
       setGuardando(false);
@@ -160,7 +161,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
                   name="clase"
                   type="text"
                   className="form-control"
-                  defaultValue={inicial?.clase ?? ''}
+                  defaultValue={plantilla?.clase ?? ''}
                 />
               </div>
               <div className="col-md-6">
@@ -170,7 +171,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
                   type="number"
                   className="form-control"
                   min={1}
-                  defaultValue={inicial?.nivel ?? 1}
+                  defaultValue={plantilla?.nivel ?? 1}
                 />
               </div>
             </>
@@ -180,7 +181,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
               <select
                 name="estadoAgresion"
                 className="form-select"
-                defaultValue={inicial?.estadoAgresion ?? 'neutral'}
+                defaultValue={(inicial && 'estadoAgresion' in inicial ? inicial.estadoAgresion : null) ?? 'neutral'}
               >
                 <option value="hostil">Hostil</option>
                 <option value="neutral">Neutral</option>
@@ -236,7 +237,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
                   type="number"
                   className="form-control"
                   min={0}
-                  defaultValue={inicial?.manaMax ?? ''}
+                  defaultValue={plantilla?.manaMax ?? ''}
                 />
               </div>
               <div className="col-md-4">
@@ -246,7 +247,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
                   type="number"
                   className="form-control"
                   min={0}
-                  defaultValue={inicial?.experiencia ?? ''}
+                  defaultValue={plantilla?.experiencia ?? ''}
                 />
               </div>
               <div className="col-md-4">
@@ -256,7 +257,7 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
                   type="number"
                   className="form-control"
                   min={0}
-                  defaultValue={inicial?.oro ?? ''}
+                  defaultValue={plantilla?.oro ?? ''}
                 />
               </div>
             </>
@@ -289,46 +290,27 @@ function Formulario({ tipo, campanaId, inicial }: FormularioProps) {
   );
 }
 
-function EditarPersonaje({ id }: { id: number }) {
+function EditarPersonaje({ id, campanaId }: { id: number; campanaId?: number }) {
   const { usuario } = useAuth();
-  const { data: datos, error, loading: cargando } = useApi(`personaje-${id}`, () =>
-    personajeService.obtener(id)
+  const volverA = campanaId === undefined ? '/personajes' : `/campanas/${campanaId}`;
+  const { data, error, loading } = useApi<Personaje | NpcCampana>(`${volverA}/editar/${id}`, () =>
+    campanaId === undefined ? personajeService.obtener(id) : npcCampanaService.obtener(campanaId, id)
   );
 
-  if (cargando) return <Cargando pagina />;
-  if (error || !datos) {
-    return (
-      <ErrorPagina
-        mensaje={error?.message ?? 'Personaje no encontrado'}
-        volverA="/personajes"
-        textoVolver="← Volver a mis personajes"
-      />
-    );
+  if (loading) return <Cargando pagina />;
+  if (error || !data) {
+    return <ErrorPagina mensaje={error?.message ?? 'Personaje no encontrado'} volverA={volverA} textoVolver="← Volver" />;
+  }
+  if ('usuarioId' in data && data.usuarioId !== usuario?.id) {
+    return <ErrorPagina mensaje="No tenés permiso para editar este personaje" volverA={volverA} textoVolver="← Volver" />;
   }
 
-  const p: PersonajeDetalle = datos;
-  const puedeEditar =
-    p.tipo === 'jugable' ? p.usuarioId === usuario?.id : p.campana?.usuarioId === usuario?.id;
-
-  if (!puedeEditar) {
-    return (
-      <ErrorPagina
-        mensaje="No tenés permiso para editar este personaje"
-        volverA="/personajes"
-        textoVolver="← Volver a mis personajes"
-      />
-    );
-  }
-
-  return <Formulario tipo={p.tipo} inicial={p} />;
+  return <Formulario campanaId={campanaId} inicial={data} />;
 }
 
-// /personajes/nuevo crea un jugable; /campanas/:campanaId/npcs/nuevo crea un NPC;
-// /personajes/:id/editar edita cualquiera de los dos
 export function PersonajeForm() {
   const { id, campanaId } = useParams();
-
-  if (id) return <EditarPersonaje id={Number(id)} />;
-  if (campanaId) return <Formulario tipo="no_jugable" campanaId={Number(campanaId)} />;
-  return <Formulario tipo="jugable" />;
+  const idCampana = campanaId === undefined ? undefined : Number(campanaId);
+  if (id) return <EditarPersonaje id={Number(id)} campanaId={idCampana} />;
+  return <Formulario campanaId={idCampana} />;
 }

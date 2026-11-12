@@ -4,27 +4,32 @@ import { Prisma } from "../generated/prisma/client";
 //   { id }         -> una campaña (campana.service.delete)
 //   { usuarioId }  -> todas las de un master (usuario.service.delete)
 // Rasgos, acciones y objetos específicos de la campaña solo se dan de baja
-// si ninguna instancia ACTIVA de PersonajeCampana los usa.
+// si ninguna instancia activa de jugador o NPC los usa.
 export async function darDeBajaCampanas(
   tx: Prisma.TransactionClient,
   where: Prisma.CampanaWhereInput
 ) {
   await tx.campana.updateMany({ where, data: { activo: false } });
 
-  await tx.personaje.updateMany({
-    where: { tipo: "no_jugable", campana: where },
-    data: { activo: false },
-  });
+  await darDeBajaNpcs(tx, { campana: where });
 
   await tx.mapa.updateMany({ where: { campana: where }, data: { activo: false } });
 
   await tx.rasgo.updateMany({
-    where: { campana: where, personajesCampana: { none: { activo: true } } },
+    where: {
+      campana: where,
+      personajesCampana: { none: { activo: true } },
+      npcsCampana: { none: { activo: true } },
+    },
     data: { activo: false },
   });
 
   await tx.accion.updateMany({
-    where: { campana: where, personajesCampana: { none: { activo: true } } },
+    where: {
+      campana: where,
+      personajesCampana: { none: { activo: true } },
+      npcsCampana: { none: { activo: true } },
+    },
     data: { activo: false },
   });
 
@@ -32,6 +37,7 @@ export async function darDeBajaCampanas(
     where: {
       campana: where,
       personajesCampana: { none: { personajeCampana: { activo: true } } },
+      npcsCampana: { none: { npcCampana: { activo: true } } },
     },
     data: { activo: false },
   });
@@ -50,11 +56,19 @@ export async function darDeBajaInstancias(
   await tx.personajeCampana.updateMany({ where, data: { activo: false } });
 }
 
+export async function darDeBajaNpcs(
+  tx: Prisma.TransactionClient,
+  where: Prisma.NpcCampanaWhereInput
+) {
+  await tx.fichaMapa.deleteMany({ where: { npcCampana: where } });
+  await tx.npcCampana.updateMany({ where, data: { activo: false } });
+}
+
 export async function darDeBajaPersonajes(
   tx: Prisma.TransactionClient,
   where: Prisma.PersonajeWhereInput
 ) {
-  await tx.fichaMapa.deleteMany({ where: { personaje: where } }); // fichas de NPCs
+  await darDeBajaNpcs(tx, { personaje: where });
   await darDeBajaInstancias(tx, { personaje: where });
   await tx.personaje.updateMany({ where, data: { activo: false } });
 }

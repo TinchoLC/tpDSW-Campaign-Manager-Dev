@@ -1,15 +1,15 @@
 import { personajeCampanaRepository } from "./personaje-campana.repository";
-import { campanaRepository } from "../campana/campana.repository";
-import { prisma } from "../../lib/prisma";
-import { Prisma } from "../../generated/prisma/client";
-import { darDeBajaInstancias } from "../../lib/baja-logica";
-import { assertCampanaEscribible, getRolEnCampana } from "../../lib/campana-acceso";
+import { campanaRepository } from "../../campana/campana.repository";
+import { prisma } from "../../../lib/prisma";
+import { Prisma } from "../../../generated/prisma/client";
+import { darDeBajaInstancias } from "../../../lib/baja-logica";
+import { assertCampanaEscribible, getRolEnCampana } from "../../../lib/campana-acceso";
 import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
   NotFoundError,
-} from "../../lib/errors";
+} from "../../../lib/errors";
 import { UpdatePersonajeCampanaDTO } from "./personaje-campana.dto";
 
 async function getCampanaOrFail(campanaId: number) {

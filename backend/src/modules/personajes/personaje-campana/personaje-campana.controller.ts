@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { idSchema } from "../../lib/schemas";
+import { idSchema } from "../../../lib/schemas";
 import {
   vincularPersonajeSchema,
   updatePersonajeCampanaSchema,

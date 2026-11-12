@@ -6,9 +6,6 @@ import {
   updateCampanaSchema,
 } from "./campana.dto";
 import { campanaService } from "./campana.service";
-import { estadoAgresionEnum } from "../../lib/estadoAgresionEnum";
-
-const npcsQuerySchema = z.object({ estadoAgresion: estadoAgresionEnum.optional() });
 
 const idSchema = z.coerce.number().int().positive();
 
@@ -62,14 +59,6 @@ export const campanaController = {
     } catch (err) {
       next(err);
     }
-  },
-
-  async getNpcs(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = idSchema.parse(req.params.id);
-      const { estadoAgresion } = npcsQuerySchema.parse(req.query);
-      res.json(await campanaService.getNpcs(id, req.user.id, estadoAgresion));
-    } catch (err) { next(err); }
   },
 
   async update(req: Request, res: Response, next: NextFunction) {
